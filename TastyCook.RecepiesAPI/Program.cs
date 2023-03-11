@@ -1,5 +1,7 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using TastyCook.RecepiesAPI;
+using TastyCook.RecepiesAPI.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,16 @@ else
 
 
 builder.Services.AddScoped<RecipeService, RecipeService>();
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, configurator) =>
+    {
+        var rabbitMqSettings = builder.Configuration.GetSection(nameof(RabbitMQSettings));
+        configurator.Host(rabbitMqSettings.Host);
+        configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter(serviceSet));
+    });
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
