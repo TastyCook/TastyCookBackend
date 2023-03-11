@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TastyCook.RecepiesAPI.Models;
+using TastyCookBroker;
 
 namespace TastyCook.RecepiesAPI.Controllers
 {
@@ -9,10 +11,12 @@ namespace TastyCook.RecepiesAPI.Controllers
     public class RecipeController : ControllerBase
     {
         private readonly RecipeService _recipeService;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public RecipeController(RecipeService recipeService)
+        public RecipeController(RecipeService recipeService, IPublishEndpoint publishEndpoint)
         {
             _recipeService= recipeService;
+            _publishEndpoint= publishEndpoint;
         }
 
         // GET: RecipeController
@@ -40,11 +44,12 @@ namespace TastyCook.RecepiesAPI.Controllers
         // POST: RecipeController/Create
         [HttpPost("Add")]
         //[ValidateAntiForgeryToken]
-        public ActionResult Add(Recipe recipe)
+        public async Task<ActionResult> Add(Recipe recipe)
         {
             try
             {
                 _recipeService.Add(recipe);
+                await _publishEndpoint.Publish(new Contracts.RecipeCreated(recipe.Id));
                 return Ok();
             }
             catch (Exception exc)
@@ -56,11 +61,12 @@ namespace TastyCook.RecepiesAPI.Controllers
         // POST: RecipeController/Edit/5
         [HttpPost("Update")]
         //[ValidateAntiForgeryToken]
-        public ActionResult Update(Recipe recipe)
+        public async Task<ActionResult> Update(Recipe recipe)
         {
             try
             {
                 _recipeService.Update(recipe);
+                await _publishEndpoint.Publish(new Contracts.RecipeUpdated(recipe.Id));
                 return Ok();
             }
             catch (Exception exc)
