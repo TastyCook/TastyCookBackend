@@ -12,39 +12,36 @@ namespace TastyCook.RecepiesAPI
             _db = db;
         }
 
-        // GET: RecipeService
-        public IEnumerable<Recipe> GetAll()
+        public IEnumerable<Recipe> GetAll(int limit, int offset)
         {
-            return _db.Recipes.ToList();
+            var recipes = _db.Recipes.Skip(offset).Take(limit).ToList();
+            return recipes;
         }
 
-        // GET: RecipeService/Details/5
+        public IEnumerable<Recipe> GetUserRecipes(string email)
+        {
+            //var recipes = _db.Recipes.Where(r => r.RecipeUsers.In);
+            //return recipes;
+            throw new NotImplementedException();
+        }
+
         public Recipe GetById(int id)
         {
             return _db.Recipes.FirstOrDefault(r => r.Id == id);
         }
 
-        // POST: RecipeService/Create
-        [HttpPost]
-        //[ValidateAntiForgeryToken]
         public void Add(Recipe recipe)
         {
             _db.Recipes.Add(recipe);
             _db.SaveChanges();
         }
 
-        // POST: RecipeService/Edit/5
-        [HttpPost]
-        //[ValidateAntiForgeryToken]
         public void Update(Recipe recipe)
         {
             _db.Recipes.Update(recipe);
             _db.SaveChanges();
         }
 
-        // POST: RecipeService/Delete/5
-        [HttpPost]
-        //[ValidateAntiForgeryToken]
         public void DeleteById(int id)
         {
             var recipeToDelete = _db.Recipes.FirstOrDefault(r =>r.Id == id);
