@@ -46,9 +46,9 @@ namespace TastyCook.RecepiesAPI.Controllers
         [Route("GetAllByUser")]
         public IEnumerable<Recipe> GetAllByUser()
         {
-            string userId = User.Identity.Name;
+            string userEmail= User.Identity.Name;
 
-            return _recipeService.GetUserRecipes("");
+            return _recipeService.GetUserRecipes(userEmail);
         }
 
         // GET: RecipeController/Details/5
@@ -66,13 +66,14 @@ namespace TastyCook.RecepiesAPI.Controllers
         }
 
         // POST: RecipeController/Create
-        [HttpPost]
+        [HttpPost("Add")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Add([FromBody] RecipeModel recipe)
         {
             try
             {
-                _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description });
+                string userEmail = User.Identity.Name;
+                _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description }, userEmail);
                 //await _publishEndpoint.Publish(new Contracts.Contracts.RecipeItemCreated(recipe.Id, recipe.Title, recipe.Description));
                 return Ok();
             }
@@ -83,13 +84,15 @@ namespace TastyCook.RecepiesAPI.Controllers
         }
 
         // POST: RecipeController/Edit/5
-        [HttpPost("Update")]
+        [HttpPut("Update")]
         //[ValidateAntiForgeryToken]
-        public async Task<ActionResult> Update(Recipe recipe)
+        public async Task<ActionResult> Update(RecipeModel recipe)
         {
             try
             {
-                _recipeService.Update(recipe);
+                string userEmail = User.Identity.Name;
+                _recipeService.Update(recipe, userEmail);
+
                 //await _publishEndpoint.Publish(new Contracts.RecipeUpdated(recipe.Id));
                 return Ok();
             }
@@ -100,13 +103,14 @@ namespace TastyCook.RecepiesAPI.Controllers
         }
 
         // POST: RecipeController/Delete/5
-        [HttpPost("DeleteById")]
+        [HttpDelete("Delete")]
         //[ValidateAntiForgeryToken]
         public ActionResult DeleteById(int id)
         {
             try
             {
-                _recipeService.DeleteById(id);
+                string userEmail = User.Identity.Name;
+                _recipeService.DeleteById(id, userEmail);
                 return Ok();
             }
             catch (Exception exc)

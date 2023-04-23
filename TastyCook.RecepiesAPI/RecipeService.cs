@@ -20,9 +20,14 @@ namespace TastyCook.RecepiesAPI
 
         public IEnumerable<Recipe> GetUserRecipes(string email)
         {
-            //var recipes = _db.Recipes.Where(r => r.RecipeUsers.In);
-            //return recipes;
-            throw new NotImplementedException();
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                return Enumerable.Empty<Recipe>();
+            }
+
+            var recipes = _db.Recipes.Where(r => r.UserId == user.Id).ToList();
+            return recipes;
         }
 
         public Recipe GetById(int id)
@@ -30,21 +35,28 @@ namespace TastyCook.RecepiesAPI
             return _db.Recipes.FirstOrDefault(r => r.Id == id);
         }
 
-        public void Add(Recipe recipe)
+        public void Add(Recipe recipe, string userEmail)
         {
+            var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
+            recipe.UserId = user.Id;
             _db.Recipes.Add(recipe);
             _db.SaveChanges();
         }
 
-        public void Update(Recipe recipe)
+        public void Update(RecipeModel recipe, string userEmail)
         {
-            _db.Recipes.Update(recipe);
+            var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
+            var recipeDb = _db.Recipes.Find(recipe.Id);
+            recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
+            recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
+            recipeDb.Likes = recipe.Likes ?? recipeDb.Likes;
             _db.SaveChanges();
         }
 
-        public void DeleteById(int id)
+        public void DeleteById(int id, string userEmail)
         {
-            var recipeToDelete = _db.Recipes.FirstOrDefault(r =>r.Id == id);
+            var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
+            var recipeToDelete = _db.Recipes.FirstOrDefault(r =>r.Id == id && r.UserId == user.Id);
             if (recipeToDelete != null)
             {
                 _db.Recipes.Remove(recipeToDelete);

@@ -1,4 +1,5 @@
-﻿using TastyCook.RecepiesAPI.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using TastyCook.RecepiesAPI.Entities;
 
 namespace TastyCook.RecepiesAPI.Models
 {
@@ -12,6 +13,7 @@ namespace TastyCook.RecepiesAPI.Models
         //public byte[] Image { get; set; }
         //public IEnumerable<RecipeUser> RecipeUsers { get; set; }
         public string UserId { get; set; }
-        public User User { get; set; }
+        [NotMapped]
+        public virtual User User { get; set; }
     }
 }

@@ -8,5 +8,5 @@ public class User
     public string Email { get; set; }
     public string Password { get; set; }
     //public IEnumerable<RecipeUser> RecipeUsers { get; set; }
-    public IEnumerable<Recipe> Recipes { get; set; }
+    public virtual IEnumerable<Recipe> Recipes { get; set; }
 }
