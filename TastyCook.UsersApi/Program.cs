@@ -6,9 +6,9 @@ using TastyCook.UsersAPI;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
-using TastyCook.RecepiesAPI.Settings;
 using TastyCook.UsersAPI.Entities;
 using Microsoft.Extensions.Options;
+using TastyCook.UsersAPI.Settings;
 
 
 var builder = WebApplication.CreateBuilder(args);

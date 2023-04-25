@@ -1,4 +1,4 @@
-﻿namespace TastyCook.UsersAPI.Settings
+﻿namespace TastyCook.RecipesAPI.Settings
 {
     public class RabbitMQSettingsOptions
     {
