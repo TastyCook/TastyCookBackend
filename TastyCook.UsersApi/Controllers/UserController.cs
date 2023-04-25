@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
-using TastyCook.RecepiesAPI.Models;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
 using static MassTransit.ValidationResultExtensions;

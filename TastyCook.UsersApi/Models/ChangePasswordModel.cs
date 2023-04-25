@@ -1,4 +1,4 @@
-﻿namespace TastyCook.RecepiesAPI.Models;
+﻿namespace TastyCook.UsersAPI.Models;
 
 public class ChangePasswordModel
 {
