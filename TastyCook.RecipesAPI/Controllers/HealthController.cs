@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace TastyCook.UsersAPI.Controllers
+namespace TastyCook.RecipesAPI.Controllers
 {
     [ApiController]
     [Route("/health")]
     public class HealthController : ControllerBase
     {
-        [HttpGet]
+        [HttpGet("Test")]
         public string HealthPing()
         {
             return "Server is working";
