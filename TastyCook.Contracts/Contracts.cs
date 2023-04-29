@@ -1,4 +1,4 @@
-﻿namespace Contracts
+﻿namespace TastyCook.Contracts
 {
     public class Contracts
     {
