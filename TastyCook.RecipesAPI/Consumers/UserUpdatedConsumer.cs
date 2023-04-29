@@ -1,7 +1,7 @@
 ﻿using MassTransit;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
-using static Contracts.Contracts;
+using static TastyCook.Contracts.Contracts;
 
 namespace TastyCook.RecipesAPI.Consumers;
 

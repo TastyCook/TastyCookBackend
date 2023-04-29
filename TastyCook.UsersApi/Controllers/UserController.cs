@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
+using static TastyCook.Contracts.Contracts;
 using static MassTransit.ValidationResultExtensions;
 
 namespace TastyCook.UsersAPI.Controllers
@@ -73,7 +74,7 @@ namespace TastyCook.UsersAPI.Controllers
             if (result.Succeeded)
             {
                 var userFromDb = await _userManager.FindByNameAsync(user.Email);
-                await _publishEndpoint.Publish(new Contracts.Contracts.UserItemCreated(userFromDb.Id, user.Email, user.Password));
+                await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Password));
             }
             return !result.Succeeded ? new BadRequestObjectResult(result) : StatusCode(201);
         }
@@ -111,7 +112,7 @@ namespace TastyCook.UsersAPI.Controllers
 
             var result = await _userManager.ChangePasswordAsync(user, changePasswordModel.CurrentPassword, changePasswordModel.NewPassword);
 
-            await _publishEndpoint.Publish(new Contracts.Contracts.UserItemUpdated(user.Id, user.Email, changePasswordModel.NewPassword));
+            await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, changePasswordModel.NewPassword));
 
             if (result.Succeeded)
             {

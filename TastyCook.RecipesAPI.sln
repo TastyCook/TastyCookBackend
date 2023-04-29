@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.UsersAPI", "TastyCook.UsersApi\TastyCook.UsersAPI.csproj", "{594B0074-C3E4-4439-BCDE-EA3E1246D7AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.UsersAPI", "TastyCook.UsersAPI\TastyCook.UsersAPI.csproj", "{594B0074-C3E4-4439-BCDE-EA3E1246D7AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.RecipesAPI", "TastyCook.RecipesAPI\TastyCook.RecipesAPI.csproj", "{6583E6C8-FC8D-4F15-A7F2-20B1D28548D5}"
 EndProject
