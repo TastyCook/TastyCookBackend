@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\TastyCook\Contracts\TastyCook.Contracts.csproj" />
+    <ProjectReference Include="..\TastyCook.Contracts\TastyCook.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
