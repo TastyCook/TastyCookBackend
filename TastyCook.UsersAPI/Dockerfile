@@ -2,7 +2,7 @@
 WORKDIR /App
 
 COPY ./TastyCook.UsersAPI ./TastyCook.UsersAPI
-COPY ./Contracts ./Contracts
+COPY ./TastyCook.Contracts ./TastyCook.Contracts
 
 # Restore as distinct layers
 RUN dotnet restore "./TastyCook.UsersAPI/TastyCook.UsersAPI.csproj"
