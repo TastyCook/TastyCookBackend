@@ -60,7 +60,6 @@ namespace TastyCook.UsersAPI.Controllers
         [Authorize]
         public string Test()
         {
-            string userName = User.Identity.Name;
             return "Hello";
         }
 
@@ -69,12 +68,12 @@ namespace TastyCook.UsersAPI.Controllers
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> Register([FromBody] UserModel user)
         {
-            User identityUser = new User { Email = user.Email, UserName = user.Email };
+            User identityUser = new User { Email = user.Email, UserName = user.Username };
             var result = await _userManager.CreateAsync(identityUser, user.Password);
             if (result.Succeeded)
             {
-                var userFromDb = await _userManager.FindByNameAsync(user.Email);
-                await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Password));
+                var userFromDb = await _userManager.FindByEmailAsync(user.Email);
+                await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username, user.Password));
             }
             return !result.Succeeded ? new BadRequestObjectResult(result) : StatusCode(201);
         }
@@ -99,7 +98,7 @@ namespace TastyCook.UsersAPI.Controllers
         [Route("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel changePasswordModel)
         {
-            if (changePasswordModel?.RepeatNewPassword != changePasswordModel?.RepeatNewPassword)
+            if (changePasswordModel?.NewPassword != changePasswordModel?.RepeatNewPassword)
             {
                 return BadRequest("Passwords must be same.");
             }
@@ -112,11 +111,10 @@ namespace TastyCook.UsersAPI.Controllers
 
             var result = await _userManager.ChangePasswordAsync(user, changePasswordModel.CurrentPassword, changePasswordModel.NewPassword);
 
-            await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, changePasswordModel.NewPassword));
+            await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName, changePasswordModel.NewPassword));
 
             if (result.Succeeded)
             {
-                // Password changed successfully
                 return Ok();
             }
 
@@ -134,7 +132,7 @@ namespace TastyCook.UsersAPI.Controllers
 
             if (result.Succeeded)
             {
-                await _publishEndpoint.Publish(new Contracts.Contracts.UserItemUpdated(user.Id, changeEmailModel.NewEmail, null));
+                await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName , null));
                 return Ok();
             }
 

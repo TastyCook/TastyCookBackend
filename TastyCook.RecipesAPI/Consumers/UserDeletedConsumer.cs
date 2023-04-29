@@ -16,9 +16,9 @@ public class UserDeletedConsumer : IConsumer<UserItemDeleted>
     public async Task Consume(ConsumeContext<UserItemDeleted> context)
     {
         var message = context.Message;
-        await Console.Out.WriteLineAsync($"Message from Producer : {message.id}");
+        await Console.Out.WriteLineAsync($"Message from Producer : {message.Id}");
 
-        _userService.DeleteById(message.id);
+        _userService.DeleteById(message.Id);
 
         //var item = _userService.GetById(message.id);
 

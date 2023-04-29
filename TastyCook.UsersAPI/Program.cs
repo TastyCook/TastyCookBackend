@@ -7,12 +7,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using TastyCook.UsersAPI.Entities;
-using Microsoft.Extensions.Options;
 using TastyCook.UsersAPI.Settings;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 #if DEBUG
 //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Debug");

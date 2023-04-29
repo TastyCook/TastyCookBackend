@@ -17,9 +17,9 @@ public class UserUpdatedConsumer : IConsumer<UserItemUpdated>
     public async Task Consume(ConsumeContext<UserItemUpdated> context)
     {
         var message = context.Message;
-        await Console.Out.WriteLineAsync($"Message from Producer : {message.email}");
+        await Console.Out.WriteLineAsync($"Message from Producer : {message.Email}");
 
-        _userService.Update(new User { Id = message.id, Email = message.email, Password = message.password });
+        _userService.Update(new User { Id = message.Id, Email = message.Email, Password = message.Password });
 
         //var item = _userService.GetById(message.id);
 

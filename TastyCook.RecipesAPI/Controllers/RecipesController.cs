@@ -1,8 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 //using TastyCookBroker;
@@ -11,6 +9,7 @@ namespace TastyCook.RecipesAPI.Controllers
 {
     [ApiController]
     [Route("/api/recipes")]
+    [Authorize]
     public class RecipesController : ControllerBase
     {
         private readonly RecipeService _recipeService;
@@ -75,7 +74,7 @@ namespace TastyCook.RecipesAPI.Controllers
             {
                 string userEmail = User.Identity.Name;
                 _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description }, userEmail);
-                //await _publishEndpoint.Publish(new Contracts.Contracts.RecipeItemCreated(recipe.Id, recipe.Title, recipe.Description));
+                //await _publishEndpoint.Publish(new RecipeItemCreated(recipe.Id, recipe.Title, recipe.Description));
                 return Ok();
             }
             catch (Exception exc)
