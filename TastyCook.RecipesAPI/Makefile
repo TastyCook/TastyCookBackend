@@ -1,5 +1,5 @@
 ﻿IMG ?= tastycook.azurecr.io/recipes-api
-TAG ?= v0.1.0
+TAG ?= v0.1.1
 
 .PHONY: docker-build
 docker-build:
@@ -8,3 +8,8 @@ docker-build:
 .PHONY: docker-push
 docker-push:
 	docker push ${IMG}:${TAG}
+
+.PHONY: docker-start
+docker-start:
+	docker create -p "9001:80" --name "recipes-api-container" "${IMG}:${TAG}"
+	docker start "recipes-api-container"
