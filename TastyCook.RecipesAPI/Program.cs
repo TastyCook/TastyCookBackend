@@ -5,8 +5,6 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.RecipesAPI;
-using TastyCook.RecipesAPI.Consumers;
-using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Settings;
 
 var builder = WebApplication.CreateBuilder(args);

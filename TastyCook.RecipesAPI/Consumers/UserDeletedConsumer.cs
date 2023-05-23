@@ -20,18 +20,13 @@ public class UserDeletedConsumer : IConsumer<UserItemDeleted>
 
         _userService.DeleteById(message.Id);
 
-        //var item = _userService.GetById(message.id);
+        var item = _userService.GetById(message.Id);
 
-        //if (item != null)
-        //{
-        //    return;
-        //}
+        if (item is not null)
+        {
+            return;
+        }
 
-        //item = new User()
-        //{
-        //    Email = 
-        //}
-
-        //await repository.CreateAsync(item);
+        _userService.DeleteById(message.Id);
     }
 }

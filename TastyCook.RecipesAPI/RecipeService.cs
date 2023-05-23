@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TastyCook.RecipesAPI.Entities;
+﻿using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 
 namespace TastyCook.RecipesAPI

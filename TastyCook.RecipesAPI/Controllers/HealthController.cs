@@ -6,7 +6,7 @@ namespace TastyCook.RecipesAPI.Controllers
     [Route("/health")]
     public class HealthController : ControllerBase
     {
-        [HttpGet("Test")]
+        [HttpGet]
         public string HealthPing()
         {
             return "Server is working";

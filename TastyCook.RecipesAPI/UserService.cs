@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TastyCook.RecipesAPI.Entities;
-using TastyCook.RecipesAPI.Models;
+﻿using TastyCook.RecipesAPI.Entities;
 
 namespace TastyCook.RecipesAPI;
 
@@ -18,7 +16,7 @@ public class UserService
         return _db.Users.ToList();
     }
 
-    public User GetById(string id)
+    public User? GetById(string id)
     {
         return _db.Users.FirstOrDefault(r => r.Id == id);
     }
