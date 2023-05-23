@@ -143,7 +143,7 @@ namespace TastyCook.UsersAPI.Controllers
             {
                 _logger.LogInformation($"{DateTime.Now} | Start changing password, email {User.Identity.Name}");
 
-                if (changePasswordModel.NewPassword == changePasswordModel.RepeatNewPassword)
+                if (changePasswordModel.NewPassword == changePasswordModel.CurrentPassword)
                 {
                     _logger.LogInformation($"{DateTime.Now} | End changing passwords: same passwords, email {User.Identity.Name}");
                     return Ok("Entered password is the same");
