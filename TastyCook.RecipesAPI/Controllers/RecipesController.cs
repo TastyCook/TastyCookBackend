@@ -11,22 +11,38 @@ namespace TastyCook.RecipesAPI.Controllers
     [Authorize]
     public class RecipesController : ControllerBase
     {
+        private readonly ILogger<RecipesController> _logger;
         private readonly RecipeService _recipeService;
         private readonly IPublishEndpoint _publishEndpoint;
 
-        public RecipesController(RecipeService recipeService, IPublishEndpoint publishEndpoint)
+        public RecipesController(RecipeService recipeService,
+            IPublishEndpoint publishEndpoint,
+            ILogger<RecipesController> logger)
         {
             _recipeService = recipeService;
             _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         // GET: RecipeController
         [HttpGet]
         [AllowAnonymous]
         [Route("GetAll")]
-        public IEnumerable<Recipe> GetAll(int limit, int offset)
+        public IActionResult GetAll(int limit, int offset)
         {
-            return _recipeService.GetAll(limit, offset);
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
+                var recipes = _recipeService.GetAll(limit, offset);
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
+
+                return Ok(recipes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // TO DO: TBD recipes for user recommendations
@@ -43,11 +59,22 @@ namespace TastyCook.RecipesAPI.Controllers
         // GET: RecipeController
         [HttpGet]
         [Route("GetAllByUser")]
-        public IEnumerable<Recipe> GetAllByUser()
+        public IActionResult GetAllByUser()
         {
-            string userEmail= User.Identity.Name;
+            try
+            {
+                string userEmail = User.Identity.Name;
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
+                var recipes = _recipeService.GetUserRecipes(userEmail);
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
 
-            return _recipeService.GetUserRecipes(userEmail);
+                return Ok(recipes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // GET: RecipeController/Details/5
@@ -56,7 +83,10 @@ namespace TastyCook.RecipesAPI.Controllers
         {
             try
             {
-                return _recipeService.GetById(id);
+                _logger.LogInformation($"{DateTime.Now} | Start getting recipe by id {id}");
+                var recipe = _recipeService.GetById(id);
+                _logger.LogInformation($"{DateTime.Now} | End getting recipe by id {id}");
+                return recipe;
             }
             catch (Exception exc)
             {
@@ -71,9 +101,11 @@ namespace TastyCook.RecipesAPI.Controllers
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start creating new recipe, title {recipe.Title}");
                 string userEmail = User.Identity.Name;
                 _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description }, userEmail);
-                //await _publishEndpoint.Publish(new RecipeItemCreated(recipe.Id, recipe.Title, recipe.Description));
+                _logger.LogInformation($"{DateTime.Now} | End creating new recipe, title {recipe.Title}");
+
                 return Ok();
             }
             catch (Exception exc)
@@ -89,10 +121,11 @@ namespace TastyCook.RecipesAPI.Controllers
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start updating new recipe, id: {recipe.Id}");
                 string userEmail = User.Identity.Name;
                 _recipeService.Update(recipe, userEmail);
-
-                //await _publishEndpoint.Publish(new Contracts.RecipeUpdated(recipe.Id));
+                _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {recipe.Id}");
+                
                 return Ok();
             }
             catch (Exception exc)
@@ -108,8 +141,11 @@ namespace TastyCook.RecipesAPI.Controllers
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start deleting recipe by id {id}");
                 string userEmail = User.Identity.Name;
                 _recipeService.DeleteById(id, userEmail);
+                _logger.LogInformation($"{DateTime.Now} | End deleting recipe by id {id}");
+
                 return Ok();
             }
             catch (Exception exc)
