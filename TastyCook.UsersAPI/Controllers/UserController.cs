@@ -120,8 +120,6 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | End logging in, email {model.Email}");
 
                 return result ? Unauthorized() : Ok(new { Token = token });
-
-
             }
             catch (Exception ex)
             {
@@ -145,7 +143,13 @@ namespace TastyCook.UsersAPI.Controllers
             {
                 _logger.LogInformation($"{DateTime.Now} | Start changing password, email {User.Identity.Name}");
 
-                if (changePasswordModel?.NewPassword != changePasswordModel?.RepeatNewPassword)
+                if (changePasswordModel.NewPassword == changePasswordModel.RepeatNewPassword)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing passwords: same passwords, email {User.Identity.Name}");
+                    return Ok("Entered password is the same");
+                }
+
+                if (changePasswordModel.NewPassword != changePasswordModel.RepeatNewPassword)
                 {
                     _logger.LogInformation($"{DateTime.Now} | End changing passwords: different passwords, email {User.Identity.Name}");
                     return BadRequest("Passwords must be the same.");
@@ -186,18 +190,26 @@ namespace TastyCook.UsersAPI.Controllers
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start changing email, oldEmail {User.Identity.Name}");
-                string userName = User.Identity.Name;
-                var user = await _userManager.FindByEmailAsync(userName);
+
+                string userEmail = User.Identity.Name;
+                var user = await _userManager.FindByEmailAsync(userEmail);
+
+                if (changeEmailModel.NewEmail == userEmail)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing email: same emails, email {userEmail}");
+                    return Ok("Entered email is the same");
+                }
+
                 user.Email = changeEmailModel.NewEmail;
                 var result = await _userManager.UpdateAsync(user);
 
-                _logger.LogInformation($"{DateTime.Now} | End changing email, oldEmail {User.Identity.Name}");
+                _logger.LogInformation($"{DateTime.Now} | End changing email, oldEmail {userEmail}");
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {User.Identity.Name}");
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
                     await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, null));
-                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {User.Identity.Name}");
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
 
                     return Ok();
                 }
