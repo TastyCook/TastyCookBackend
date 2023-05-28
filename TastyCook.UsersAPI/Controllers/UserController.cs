@@ -7,7 +7,6 @@ using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
@@ -16,7 +15,7 @@ using static TastyCook.Contracts.Contracts;
 namespace TastyCook.UsersAPI.Controllers
 {
     [Route("api/[controller]")]
-    public class UserController : Controller
+    public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
         private readonly UserManager<User> _userManager;
@@ -39,19 +38,10 @@ namespace TastyCook.UsersAPI.Controllers
         {
             [Required] public string IdToken { get; set; }
         }
-        
-
-        [HttpGet]
-        [Route("test")]
-        [Authorize]
-        public string Test()
-        {
-            return "Hello";
-        }
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("googleAuthenticate")]
+        [Route("google-authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequest data)
         {
             try
@@ -59,12 +49,9 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start authentication with Google account {data.IdToken}");
                 GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-                // Change this to your google client ID
-                settings.Audience = new List<string>()
-                    { "949493455412-lab5qmkch79a6ilg7u9vrin4lbhe024q.apps.googleusercontent.com" };
+                settings.Audience = new List<string>() { "949493455412-lab5qmkch79a6ilg7u9vrin4lbhe024q.apps.googleusercontent.com" };
 
-                GoogleJsonWebSignature.Payload
-                    payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
+                GoogleJsonWebSignature.Payload payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
                 var token = await CreateTokenAsync(new UserModel() { Email = payload.Email });
                 _logger.LogInformation($"{DateTime.Now} | Successful authentication with Google account {data.IdToken}");
 
@@ -128,15 +115,8 @@ namespace TastyCook.UsersAPI.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("logout")]
-        public async Task<IActionResult> LogOut()
-        {
-            throw new NotImplementedException();
-        }
-
         [HttpPut]
-        [Route("changePassword")]
+        [Route("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel changePasswordModel)
         {
             try
@@ -184,7 +164,7 @@ namespace TastyCook.UsersAPI.Controllers
         }
 
         [HttpPut]
-        [Route("changeEmail")]
+        [Route("change-email")]
         public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailModel changeEmailModel)
         {
             try

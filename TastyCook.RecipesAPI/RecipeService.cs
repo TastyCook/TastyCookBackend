@@ -49,7 +49,6 @@ namespace TastyCook.RecipesAPI
             var recipeDb = _db.Recipes.Find(recipe.Id);
             recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
             recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
-            recipeDb.Likes = recipe.Likes ?? recipeDb.Likes;
             _db.SaveChanges();
         }
 
@@ -62,6 +61,13 @@ namespace TastyCook.RecipesAPI
                 _db.Recipes.Remove(recipeToDelete);
                 _db.SaveChanges();
             }
+        }
+
+        public void UpdateLikes(int id, bool isPositive)
+        {
+            var recipeDb = _db.Recipes.Find(id);
+            recipeDb.Likes += isPositive ? 1 : -1;
+            _db.SaveChanges();
         }
     }
 }

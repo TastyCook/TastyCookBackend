@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
+using TastyCook.UsersAPI.Models;
 
 namespace TastyCook.RecipesAPI.Controllers
 {
@@ -24,10 +25,9 @@ namespace TastyCook.RecipesAPI.Controllers
             _logger = logger;
         }
 
-        // GET: RecipeController
         [HttpGet]
         [AllowAnonymous]
-        [Route("GetAll")]
+        [Route("")]
         public IActionResult GetAll(int limit, int offset)
         {
             try
@@ -45,8 +45,7 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
-        // TO DO: TBD recipes for user recommendations
-        //// GET: RecipeController
+        // TODO: TBD recipes for user recommendations
         //[HttpGet]
         //[Route("GetAllByUser")]
         //public IEnumerable<Recipe> GetAllByUser()
@@ -56,9 +55,8 @@ namespace TastyCook.RecipesAPI.Controllers
         //    return _recipeService.GetAllByUser();
         //}
 
-        // GET: RecipeController
         [HttpGet]
-        [Route("GetAllByUser")]
+        [Route("by-user")]
         public IActionResult GetAllByUser()
         {
             try
@@ -77,8 +75,8 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
-        // GET: RecipeController/Details/5
-        [HttpGet("GetById/{id}")]
+        [HttpGet("{id}")]
+        //[Route("")]
         public ActionResult<Recipe> GetById(int id)
         {
             try
@@ -90,12 +88,12 @@ namespace TastyCook.RecipesAPI.Controllers
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Create
-        [HttpPost("Add")]
+        [HttpPost("")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Add([FromBody] RecipeModel recipe)
         {
@@ -110,12 +108,12 @@ namespace TastyCook.RecipesAPI.Controllers
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Edit/5
-        [HttpPut("Update")]
+        [HttpPatch("")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Update(RecipeModel recipe)
         {
@@ -130,12 +128,12 @@ namespace TastyCook.RecipesAPI.Controllers
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Delete/5
-        [HttpDelete("Delete")]
+        [HttpDelete("{id}")]
         //[ValidateAntiForgeryToken]
         public ActionResult DeleteById(int id)
         {
@@ -150,7 +148,28 @@ namespace TastyCook.RecipesAPI.Controllers
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
+            }
+        }
+
+
+        [HttpPatch("{id}/likes")]
+        //[ValidateAntiForgeryToken]
+        public async Task<ActionResult> IncrementLikes(int id, [FromBody] ChangeLikesModel model)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start updating recipe likes, id: {id}");
+                _recipeService.UpdateLikes(id, model.IsPositive);
+                _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {id}");
+
+                return Ok();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
     }
