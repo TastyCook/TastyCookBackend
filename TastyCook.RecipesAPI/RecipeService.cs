@@ -12,13 +12,25 @@ namespace TastyCook.RecipesAPI
             _db = db;
         }
 
+        public int GetAllCount()
+        {
+            var count = _db.Recipes.Count();
+            return count;
+        }
+
+        public int GetAllUserCount()
+        {
+            var count = _db.Recipes.Count();
+            return count;
+        }
+
         public IEnumerable<Recipe> GetAll(int limit, int offset)
         {
             var recipes = _db.Recipes.Skip(offset).Take(limit).ToList();
             return recipes;
         }
 
-        public IEnumerable<Recipe> GetUserRecipes(string email)
+        public IEnumerable<Recipe> GetUserRecipes(string email, int limit, int offset)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == email);
             if (user == null)
@@ -26,7 +38,9 @@ namespace TastyCook.RecipesAPI
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipes = _db.Recipes.Where(r => r.UserId == user.Id).ToList();
+            var recipes = _db.Recipes.Where(r => r.UserId == user.Id)
+                .Skip(offset).Take(limit).ToList();
+
             return recipes;
         }
 

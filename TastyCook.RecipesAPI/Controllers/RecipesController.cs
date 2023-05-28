@@ -33,10 +33,19 @@ namespace TastyCook.RecipesAPI.Controllers
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
+
                 var recipes = _recipeService.GetAll(limit, offset);
+                var totalRecipes = _recipeService.GetAllCount();
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = recipes,
+                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                };
+
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
 
-                return Ok(recipes);
+                return Ok(recipesResponse);
             }
             catch (Exception ex)
             {
@@ -57,16 +66,25 @@ namespace TastyCook.RecipesAPI.Controllers
 
         [HttpGet]
         [Route("by-user")]
-        public IActionResult GetAllByUser()
+        public IActionResult GetAllByUser(int limit, int offset)
         {
             try
             {
                 string userEmail = User.Identity.Name;
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
-                var recipes = _recipeService.GetUserRecipes(userEmail);
+
+                var recipes = _recipeService.GetUserRecipes(userEmail, limit, offset);
+                var totalRecipes = _recipeService.GetAllUserCount();
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = recipes,
+                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                };
+
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
 
-                return Ok(recipes);
+                return Ok(recipesResponse);
             }
             catch (Exception ex)
             {
