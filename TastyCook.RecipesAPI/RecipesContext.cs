@@ -15,8 +15,8 @@ namespace TastyCook.RecipesAPI
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder
-                .UseLazyLoadingProxies();
+            //optionsBuilder
+            //    .UseLazyLoadingProxies();
         }
     }
 }
