@@ -5,8 +5,6 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.RecipesAPI;
-using TastyCook.RecipesAPI.Consumers;
-using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,16 +53,13 @@ builder.Services.AddMassTransit(x =>
     x.UsingRabbitMq((context, configurator) =>
     {
         var rabbitMqSettings = builder.Configuration.GetSection(RabbitMQSettingsOptions.RabbitMQSettings).Get<RabbitMQSettingsOptions>();
-        //configurator.Host(rabbitMqSettings.Host, "/", c => {
-        //    c.Username(rabbitMqSettings.UserName);
-        //    c.Password(rabbitMqSettings.Password);
-        //});
+        configurator.Host(rabbitMqSettings.Host, "/", c =>
+        {
+            c.Username(rabbitMqSettings.UserName);
+            c.Password(rabbitMqSettings.Password);
+        });
         configurator.Host(rabbitMqSettings.Host);
         configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("Recipes", false));
-        //configurator.ReceiveEndpoint("samplequeue", (c) => {
-        //    c.Consumer<UserCreatedConsumer>();
-        //});
-        //configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("Recipes", false));
     });
 });
 builder.Services.AddMassTransitHostedService();

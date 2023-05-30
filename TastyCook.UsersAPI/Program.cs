@@ -7,12 +7,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using TastyCook.UsersAPI.Entities;
-using Microsoft.Extensions.Options;
 using TastyCook.UsersAPI.Settings;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 #if DEBUG
 //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Debug");
@@ -39,10 +37,11 @@ builder.Services.AddMassTransit(x =>
     x.UsingRabbitMq((context, configurator) =>
     {
         var rabbitMqSettings = builder.Configuration.GetSection(RabbitMQSettingsOptions.RabbitMQSettings).Get<RabbitMQSettingsOptions>();
-        //configurator.Host(rabbitMqSettings.Host, "/", c => {
-        //    c.Username(rabbitMqSettings.UserName);
-        //    c.Password(rabbitMqSettings.Password);
-        //});
+        configurator.Host(rabbitMqSettings.Host, "/", c =>
+        {
+            c.Username(rabbitMqSettings.UserName);
+            c.Password(rabbitMqSettings.Password);
+        });
         configurator.Host(rabbitMqSettings.Host);
         configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("Users", false));
     });

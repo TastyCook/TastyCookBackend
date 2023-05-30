@@ -6,8 +6,6 @@ namespace TastyCook.UsersAPI
 {
     public class UserContext : IdentityDbContext<User>
     {
-        //public DbSet<User> Users { get; set; }
-
         public UserContext(DbContextOptions<UserContext> options) : base(options)
         {
             Database.EnsureCreated();   

@@ -18,22 +18,14 @@ public class UserCreatedConsumer : IConsumer<UserItemCreated>
     public async Task Consume(ConsumeContext<UserItemCreated> context)
     {
         var message = context.Message;
-        await Console.Out.WriteLineAsync($"Message from Producer : {message.email}");
 
-        _userService.Add(new User { Id = message.id, Email = message.email, Password = message.password });
+        var item = _userService.GetById(message.Id);
 
-        //var item = _userService.GetById(message.id);
+        if (item is not null)
+        {
+            return;
+        }
 
-        //if (item != null)
-        //{
-        //    return;
-        //}
-
-        //item = new User()
-        //{
-        //    Email = 
-        //}
-
-        //await repository.CreateAsync(item);
+        _userService.Add(new User { Id = message.Id, Email = message.Email, Password = message.Password, UserName = message.Username });
     }
 }

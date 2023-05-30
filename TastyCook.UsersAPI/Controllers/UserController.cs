@@ -1,36 +1,37 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.Encodings.Web;
 using Google.Apis.Auth;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
 using static TastyCook.Contracts.Contracts;
-using static MassTransit.ValidationResultExtensions;
 
 namespace TastyCook.UsersAPI.Controllers
 {
     [Route("api/[controller]")]
-    public class UserController : Controller
+    public class UserController : ControllerBase
     {
+        private readonly ILogger<UserController> _logger;
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IPublishEndpoint _publishEndpoint;
 
 
-        public UserController(UserManager<User> userManager, IConfiguration configuration, IPublishEndpoint publishEndpoint)
+        public UserController(UserManager<User> userManager,
+            IConfiguration configuration,
+            IPublishEndpoint publishEndpoint,
+            ILogger<UserController> logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         public class AuthenticateRequest
@@ -40,28 +41,28 @@ namespace TastyCook.UsersAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-
-        [Route("googleAuthenticate")]
+        [Route("google-authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequest data)
         {
-            GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start authentication with Google account {data.IdToken}");
+                GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-            // Change this to your google client ID
-            settings.Audience = new List<string>()
-                { "949493455412-lab5qmkch79a6ilg7u9vrin4lbhe024q.apps.googleusercontent.com" };
+                settings.Audience = new List<string>() { "949493455412-lab5qmkch79a6ilg7u9vrin4lbhe024q.apps.googleusercontent.com" };
 
-            GoogleJsonWebSignature.Payload
-                payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
-            return Ok(new { AuthToken = await CreateTokenAsync(new UserModel() { Email = payload.Email}) });
-        }
+                GoogleJsonWebSignature.Payload payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
+                var token = await CreateTokenAsync(new UserModel() { Email = payload.Email });
+                _logger.LogInformation($"{DateTime.Now} | Successful authentication with Google account {data.IdToken}");
 
-        [HttpGet]
-        [Route("test")]
-        [Authorize]
-        public string Test()
-        {
-            string userName = User.Identity.Name;
-            return "Hello";
+                return Ok(new { AuthToken = token });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+
         }
 
         [HttpPost]
@@ -69,81 +70,143 @@ namespace TastyCook.UsersAPI.Controllers
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> Register([FromBody] UserModel user)
         {
-            User identityUser = new User { Email = user.Email, UserName = user.Email };
-            var result = await _userManager.CreateAsync(identityUser, user.Password);
-            if (result.Succeeded)
+            try
             {
-                var userFromDb = await _userManager.FindByNameAsync(user.Email);
-                await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Password));
+                _logger.LogInformation($"{DateTime.Now} | Start creating new user, email {user.Email}");
+
+                User identityUser = new User { Email = user.Email, UserName = user.Username };
+                var result = await _userManager.CreateAsync(identityUser, user.Password);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | User successfully created, email {user.Email}");
+                    var userFromDb = await _userManager.FindByEmailAsync(user.Email);
+
+                    _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
+                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username, user.Password));
+                    _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
+                }
+
+                return !result.Succeeded ? new BadRequestObjectResult(result) : StatusCode(201);
             }
-            return !result.Succeeded ? new BadRequestObjectResult(result) : StatusCode(201);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> LogIn([FromBody] UserModel model)
         {
-            return !await ValidateUserAsync(model)
-                ? Unauthorized()
-                : Ok(new { Token = await CreateTokenAsync(model) });
-        }
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start logging in, email {model.Email}");
+                var result = !await ValidateUserAsync(model);
+                var token = await CreateTokenAsync(model);
+                _logger.LogInformation($"{DateTime.Now} | End logging in, email {model.Email}");
 
-        [HttpPost]
-        [Route("logout")]
-        public async Task<IActionResult> LogOut()
-        {
-            throw new NotImplementedException();
+                return result ? Unauthorized() : Ok(new { Token = token });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPut]
-        [Route("changePassword")]
+        [Route("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel changePasswordModel)
         {
-            if (changePasswordModel?.RepeatNewPassword != changePasswordModel?.RepeatNewPassword)
+            try
             {
-                return BadRequest("Passwords must be same.");
-            }
+                _logger.LogInformation($"{DateTime.Now} | Start changing password, email {User.Identity.Name}");
 
-            var user = await _userManager.FindByEmailAsync(User.Identity.Name);
-            if (user == null)
+                if (changePasswordModel.NewPassword == changePasswordModel.CurrentPassword)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing passwords: same passwords, email {User.Identity.Name}");
+                    return BadRequest("Entered password is the same");
+                }
+
+                if (changePasswordModel.NewPassword != changePasswordModel.RepeatNewPassword)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing passwords: different passwords, email {User.Identity.Name}");
+                    return BadRequest("Passwords must be the same.");
+                }
+
+                var user = await _userManager.FindByEmailAsync(User.Identity.Name);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                var result = await _userManager.ChangePasswordAsync(user, changePasswordModel.CurrentPassword,
+                    changePasswordModel.NewPassword);
+
+                _logger.LogInformation($"{DateTime.Now} | End changing passwords, email {User.Identity.Name}");
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, email {User.Identity.Name}");
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName, changePasswordModel.NewPassword));
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, email {User.Identity.Name}");
+
+                    return Ok();
+                }
+
+                return BadRequest(result.Errors);
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
             }
-
-            var result = await _userManager.ChangePasswordAsync(user, changePasswordModel.CurrentPassword, changePasswordModel.NewPassword);
-
-            await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, changePasswordModel.NewPassword));
-
-            if (result.Succeeded)
-            {
-                // Password changed successfully
-                return Ok();
-            }
-
-            return BadRequest(result.Errors);
         }
 
         [HttpPut]
-        [Route("changeEmail")]
+        [Route("change-email")]
         public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailModel changeEmailModel)
         {
-            string userName = User.Identity.Name;
-            var user = await _userManager.FindByEmailAsync(userName);
-            user.Email = changeEmailModel.NewEmail;
-            var result = await _userManager.UpdateAsync(user);
-
-            if (result.Succeeded)
+            try
             {
-                await _publishEndpoint.Publish(new Contracts.Contracts.UserItemUpdated(user.Id, changeEmailModel.NewEmail, null));
-                return Ok();
-            }
+                _logger.LogInformation($"{DateTime.Now} | Start changing email, oldEmail {User.Identity.Name}");
 
-            return StatusCode(500, result.Errors.First());
+                string userEmail = User.Identity.Name;
+                var user = await _userManager.FindByEmailAsync(userEmail);
+
+                if (changeEmailModel.NewEmail == userEmail)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing email: same emails, email {userEmail}");
+                    return Ok("Entered email is the same");
+                }
+
+                user.Email = changeEmailModel.NewEmail;
+                var result = await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation($"{DateTime.Now} | End changing email, oldEmail {userEmail}");
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, null));
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
+
+                    return Ok();
+                }
+
+                return StatusCode(500, result.Errors.First());
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
         private async Task<bool> ValidateUserAsync(UserModel model)
         {
-            var user = await _userManager.FindByNameAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             var result = user != null && await _userManager.CheckPasswordAsync(user, model.Password);
             return result;
         }
@@ -166,7 +229,7 @@ namespace TastyCook.UsersAPI.Controllers
 
         private async Task<List<Claim>> GetClaims(UserModel model)
         {
-            var user = await _userManager.FindByNameAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, model.Email)

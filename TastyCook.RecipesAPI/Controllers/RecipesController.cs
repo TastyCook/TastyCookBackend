@@ -1,38 +1,60 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
-//using TastyCookBroker;
+using TastyCook.UsersAPI.Models;
 
 namespace TastyCook.RecipesAPI.Controllers
 {
     [ApiController]
     [Route("/api/recipes")]
+    [Authorize]
     public class RecipesController : ControllerBase
     {
+        private readonly ILogger<RecipesController> _logger;
         private readonly RecipeService _recipeService;
         private readonly IPublishEndpoint _publishEndpoint;
 
-        public RecipesController(RecipeService recipeService, IPublishEndpoint publishEndpoint)
+        public RecipesController(RecipeService recipeService,
+            IPublishEndpoint publishEndpoint,
+            ILogger<RecipesController> logger)
         {
             _recipeService = recipeService;
             _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
-        // GET: RecipeController
         [HttpGet]
         [AllowAnonymous]
-        [Route("GetAll")]
-        public IEnumerable<Recipe> GetAll(int limit, int offset)
+        [Route("")]
+        public IActionResult GetAll(int limit, int offset)
         {
-            return _recipeService.GetAll(limit, offset);
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
+
+                var recipes = _recipeService.GetAll(limit, offset);
+                var totalRecipes = _recipeService.GetAllCount();
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = recipes,
+                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                };
+
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
+
+                return Ok(recipesResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
-        // TO DO: TBD recipes for user recommendations
-        //// GET: RecipeController
+        // TODO: TBD recipes for user recommendations
         //[HttpGet]
         //[Route("GetAllByUser")]
         //public IEnumerable<Recipe> GetAllByUser()
@@ -42,81 +64,130 @@ namespace TastyCook.RecipesAPI.Controllers
         //    return _recipeService.GetAllByUser();
         //}
 
-        // GET: RecipeController
         [HttpGet]
-        [Route("GetAllByUser")]
-        public IEnumerable<Recipe> GetAllByUser()
+        [Route("by-user")]
+        public IActionResult GetAllByUser(int limit, int offset)
         {
-            string userEmail= User.Identity.Name;
+            try
+            {
+                string userEmail = User.Identity.Name;
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
 
-            return _recipeService.GetUserRecipes(userEmail);
+                var recipes = _recipeService.GetUserRecipes(userEmail, limit, offset);
+                var totalRecipes = _recipeService.GetAllUserCount();
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = recipes,
+                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                };
+
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
+
+                return Ok(recipesResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
         }
 
-        // GET: RecipeController/Details/5
-        [HttpGet("GetById/{id}")]
+        [HttpGet("{id}")]
+        //[Route("")]
         public ActionResult<Recipe> GetById(int id)
         {
             try
             {
-                return _recipeService.GetById(id);
+                _logger.LogInformation($"{DateTime.Now} | Start getting recipe by id {id}");
+                var recipe = _recipeService.GetById(id);
+                _logger.LogInformation($"{DateTime.Now} | End getting recipe by id {id}");
+                return recipe;
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Create
-        [HttpPost("Add")]
+        [HttpPost("")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Add([FromBody] RecipeModel recipe)
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start creating new recipe, title {recipe.Title}");
                 string userEmail = User.Identity.Name;
                 _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description }, userEmail);
-                //await _publishEndpoint.Publish(new Contracts.Contracts.RecipeItemCreated(recipe.Id, recipe.Title, recipe.Description));
+                _logger.LogInformation($"{DateTime.Now} | End creating new recipe, title {recipe.Title}");
+
                 return Ok();
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Edit/5
-        [HttpPut("Update")]
+        [HttpPatch("")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Update(RecipeModel recipe)
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start updating new recipe, id: {recipe.Id}");
                 string userEmail = User.Identity.Name;
                 _recipeService.Update(recipe, userEmail);
-
-                //await _publishEndpoint.Publish(new Contracts.RecipeUpdated(recipe.Id));
+                _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {recipe.Id}");
+                
                 return Ok();
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
 
-        // POST: RecipeController/Delete/5
-        [HttpDelete("Delete")]
+        [HttpDelete("{id}")]
         //[ValidateAntiForgeryToken]
         public ActionResult DeleteById(int id)
         {
             try
             {
+                _logger.LogInformation($"{DateTime.Now} | Start deleting recipe by id {id}");
                 string userEmail = User.Identity.Name;
                 _recipeService.DeleteById(id, userEmail);
+                _logger.LogInformation($"{DateTime.Now} | End deleting recipe by id {id}");
+
                 return Ok();
             }
             catch (Exception exc)
             {
-                return NotFound(exc);
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
+            }
+        }
+
+
+        [HttpPatch("{id}/likes")]
+        //[ValidateAntiForgeryToken]
+        public async Task<ActionResult> IncrementLikes(int id, [FromBody] ChangeLikesModel model)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start updating recipe likes, id: {id}");
+                _recipeService.UpdateLikes(id, model.IsPositive);
+                _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {id}");
+
+                return Ok();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
             }
         }
     }

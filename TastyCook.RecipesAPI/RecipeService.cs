@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TastyCook.RecipesAPI.Entities;
+﻿using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 
 namespace TastyCook.RecipesAPI
@@ -13,13 +12,25 @@ namespace TastyCook.RecipesAPI
             _db = db;
         }
 
+        public int GetAllCount()
+        {
+            var count = _db.Recipes.Count();
+            return count;
+        }
+
+        public int GetAllUserCount()
+        {
+            var count = _db.Recipes.Count();
+            return count;
+        }
+
         public IEnumerable<Recipe> GetAll(int limit, int offset)
         {
             var recipes = _db.Recipes.Skip(offset).Take(limit).ToList();
             return recipes;
         }
 
-        public IEnumerable<Recipe> GetUserRecipes(string email)
+        public IEnumerable<Recipe> GetUserRecipes(string email, int limit, int offset)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == email);
             if (user == null)
@@ -27,7 +38,9 @@ namespace TastyCook.RecipesAPI
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipes = _db.Recipes.Where(r => r.UserId == user.Id).ToList();
+            var recipes = _db.Recipes.Where(r => r.UserId == user.Id)
+                .Skip(offset).Take(limit).ToList();
+
             return recipes;
         }
 
@@ -50,7 +63,6 @@ namespace TastyCook.RecipesAPI
             var recipeDb = _db.Recipes.Find(recipe.Id);
             recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
             recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
-            recipeDb.Likes = recipe.Likes ?? recipeDb.Likes;
             _db.SaveChanges();
         }
 
@@ -63,6 +75,13 @@ namespace TastyCook.RecipesAPI
                 _db.Recipes.Remove(recipeToDelete);
                 _db.SaveChanges();
             }
+        }
+
+        public void UpdateLikes(int id, bool isPositive)
+        {
+            var recipeDb = _db.Recipes.Find(id);
+            recipeDb.Likes += isPositive ? 1 : -1;
+            _db.SaveChanges();
         }
     }
 }

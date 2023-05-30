@@ -16,22 +16,13 @@ public class UserDeletedConsumer : IConsumer<UserItemDeleted>
     public async Task Consume(ConsumeContext<UserItemDeleted> context)
     {
         var message = context.Message;
-        await Console.Out.WriteLineAsync($"Message from Producer : {message.id}");
 
-        _userService.DeleteById(message.id);
+        var item = _userService.GetById(message.Id);
+        if (item is null)
+        {
+            return;
+        }
 
-        //var item = _userService.GetById(message.id);
-
-        //if (item != null)
-        //{
-        //    return;
-        //}
-
-        //item = new User()
-        //{
-        //    Email = 
-        //}
-
-        //await repository.CreateAsync(item);
+        _userService.DeleteById(message.Id);
     }
 }
