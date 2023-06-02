@@ -49,8 +49,7 @@ jobs:
         
     - name: Update TAG in Makefile
       run: |
-        echo "TAG ?= ${{ steps.prep.outputs.tag }}" >> ${{ matrix.service }}/Makefile
-
+        sed -i "s|TAG ?=.*|TAG ?= ${{ steps.prep.outputs.tag }}|" ${{ matrix.service }}/Makefile
         
     - name: Build and push Docker image
       run: |
