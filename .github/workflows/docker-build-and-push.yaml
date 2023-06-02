@@ -1,0 +1,72 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: TastyCook.RecipesAPI
+          - service: TastyCook.UsersAPI
+        # Add other service names as needed
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Prepare variables
+      id: prep
+      run: |
+        # This transforms long folder names to kebab-case and deletes "TastyCook" prefix
+        SERVICE_NAME=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]' | tr '.' '-')
+        echo ::set-output name=service_name::$SERVICE_NAME
+
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        
+    - name: Install Make
+      run: sudo apt-get install -y make
+        
+    - name: Update TAG in Makefile
+      run: |
+        echo "TAG ?= $(date +%s)" >> ${{ matrix.service }}/Makefile
+        
+    - name: Build and push Docker image
+      run: |
+        cd ${{ matrix.service }}
+        make docker-build
+        make docker-push
+
+    - name: Checkout YAML repo
+      uses: actions/checkout@v2
+      with:
+        repository: https://github.com/dmytrovorona/TastyCookCloud
+        token: ${{ secrets.PAT }}
+        path: .
+
+    - name: Update TAG in YAML files
+      run: |
+        find . -name '*.yaml' -exec sed -i 's|orgname/${{ steps.prep.outputs.service_name }}:.*|orgname/${{ steps.prep.outputs.service_name }}:$(date +%s)|g' {} \;
+
+    - name: Push changes
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Update image tag for ${{ steps.prep.outputs.service_name }}"
+        git push
