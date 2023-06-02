@@ -1,5 +1,8 @@
 name: Docker Build and Push
 
+env:
+  REGISTRY_LOGIN_SERVER: tastycook.azurecr.io
+
 on:
   push:
     branches:
@@ -30,12 +33,14 @@ jobs:
       run: |
         # This transforms long folder names to kebab-case and deletes "TastyCook" prefix
         SERVICE_NAME=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]' | tr '.' '-')
+        TAG=$(date +%s)
         echo ::set-output name=service_name::$SERVICE_NAME
+        echo ::set-output name=tag::$TAG
 
     - name: Login to Azure Container Registry
       uses: azure/docker-login@v1
       with:
-        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
         
@@ -44,7 +49,8 @@ jobs:
         
     - name: Update TAG in Makefile
       run: |
-        echo "TAG ?= $(date +%s)" >> ${{ matrix.service }}/Makefile
+        echo "TAG ?= ${{ steps.prep.outputs.tag }}" >> ${{ matrix.service }}/Makefile
+
         
     - name: Build and push Docker image
       run: |
@@ -56,13 +62,13 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: https://github.com/dmytrovorona/TastyCookCloud
-        token: ${{ secrets.PAT }}
+        token: ${{ secrets.CLOUD_PAT }}
         path: .
 
     - name: Update TAG in YAML files
       run: |
-        find . -name '*.yaml' -exec sed -i 's|orgname/${{ steps.prep.outputs.service_name }}:.*|orgname/${{ steps.prep.outputs.service_name }}:$(date +%s)|g' {} \;
-
+        find . -name '*.yaml' -exec sed -i -e "s|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:.*|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:${{ steps.prep.outputs.tag }}|" {} \;
+    
     - name: Push changes
       run: |
         git config user.name "GitHub Actions"
