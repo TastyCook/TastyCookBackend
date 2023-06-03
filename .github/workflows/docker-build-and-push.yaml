@@ -19,6 +19,8 @@ jobs:
         # Add other service names as needed
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Prepare variables
         id: prep
@@ -37,9 +39,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Update TAG in Makefile
         run: |
