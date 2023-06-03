@@ -23,8 +23,7 @@ jobs:
       - name: Prepare variables
         id: prep
         run: |
-          # This transforms long folder names to kebab-case and deletes "TastyCook" prefix
-          SERVICE_NAME=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]' | tr '.' '-')
+          SERVICE_NAME=$(grep -E "^IMG \?=" ${{ matrix.service }}/Makefile | cut -d'/' -f2)
           TAG=$(date +%s)
           echo ::set-output name=service_name::$SERVICE_NAME
           echo ::set-output name=tag::$TAG
@@ -67,12 +66,9 @@ jobs:
           token: ${{ secrets.CLOUD_PAT }}
           path: .
 
-      - name: Update TAG in YAML files
+      - name: Update tags in cloud repo
         run: |
-          find . -name '*.yaml' -exec sed -i -e "s|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:.*|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:${{ steps.prep.outputs.tag }}|" {} \;
-
-      - name: Push changes
-        run: |
+          find . -type f -name '*.yaml' -print0 | xargs -0 sed -i "s|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:[^ \"]*|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:${{ steps.prep.outputs.tag }}|g"
           git config user.name "GitHub Actions"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
