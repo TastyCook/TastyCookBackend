@@ -63,7 +63,7 @@ jobs:
       - name: Checkout YAML repo
         uses: actions/checkout@v2
         with:
-          repository: https://github.com/TastyCook/TastyCookCloud
+          repository: TastyCook/TastyCookCloud
           token: ${{ secrets.CLOUD_PAT }}
           path: .
 
