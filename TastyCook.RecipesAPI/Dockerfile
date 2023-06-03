@@ -5,7 +5,7 @@ COPY ./TastyCook.RecipesAPI ./TastyCook.RecipesAPI
 COPY ./TastyCook.Contracts ./TastyCook.Contracts
 
 # Restore as distinct layers
-RUN dotnet restore "./TastyCook.RecipesAPI/TastyCook.RecipesAPI.csproj" -v d
+RUN dotnet restore "./TastyCook.RecipesAPI/TastyCook.RecipesAPI.csproj"
 
 # Build and publish a release
 RUN dotnet publish "./TastyCook.RecipesAPI/TastyCook.RecipesAPI.csproj" -c Release -o out
