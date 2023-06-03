@@ -23,7 +23,7 @@ jobs:
       - name: Prepare variables
         id: prep
         run: |
-          SERVICE_NAME=$(grep -E "^IMG \?=" ${{ matrix.service }}/Makefile | cut -d'/' -f2)
+          SERVICE_NAME=$(grep -oP '(?<=IMG \?= ${{ env.REGISTRY_LOGIN_SERVER }}/)[^\s]+' ${{ matrix.service }}/Makefile)
           TAG=$(date +%s)
           echo ::set-output name=service_name::$SERVICE_NAME
           echo ::set-output name=tag::$TAG
