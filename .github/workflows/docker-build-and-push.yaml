@@ -6,7 +6,7 @@ env:
 on:
   push:
     branches:
-      - configure-workflow
+      - main
 
 jobs:
   build:
