@@ -65,6 +65,8 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
 builder.Services.Configure<IdentityOptions>(options =>
 {
     // Password settings.
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 6;
