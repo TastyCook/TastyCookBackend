@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.RecipesAPI;
 using TastyCook.RecipesAPI.Settings;
+using TastyCook.RecipesAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ else
     builder.Services.AddDbContext<RecipesContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("RecipeContextProd")));
 }
+
+builder.Services.AddScoped<CategoriesService>();
 builder.Services.AddScoped<RecipeService>();
 builder.Services.AddScoped<UserService>();
 // To apply migration automatically.

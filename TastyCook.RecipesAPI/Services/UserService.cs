@@ -1,6 +1,6 @@
 ﻿using TastyCook.RecipesAPI.Entities;
 
-namespace TastyCook.RecipesAPI;
+namespace TastyCook.RecipesAPI.Services;
 
 public class UserService
 {

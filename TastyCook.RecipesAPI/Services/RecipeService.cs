@@ -1,7 +1,9 @@
-﻿using TastyCook.RecipesAPI.Entities;
+﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 
-namespace TastyCook.RecipesAPI
+namespace TastyCook.RecipesAPI.Services
 {
     public class RecipeService
     {
@@ -26,7 +28,7 @@ namespace TastyCook.RecipesAPI
 
         public IEnumerable<Recipe> GetAll(int limit, int offset)
         {
-            var recipes = _db.Recipes.Skip(offset).Take(limit).ToList();
+            var recipes = _db.Recipes.Include(r => r.Categories).Skip(offset).Take(limit).ToList();
             return recipes;
         }
 
@@ -49,11 +51,21 @@ namespace TastyCook.RecipesAPI
             return _db.Recipes.FirstOrDefault(r => r.Id == id);
         }
 
-        public void Add(Recipe recipe, string userEmail)
+        public void Add(RecipeModel recipe, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            recipe.UserId = user.Id;
-            _db.Recipes.Add(recipe);
+            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name))
+                .ToList();
+
+            var dbRecipe = new Recipe
+            {
+                Name = recipe.Title,
+                Description = recipe.Description,
+                Categories = categories,
+                UserId = user.Id
+            };
+
+            _db.Recipes.Add(dbRecipe);
             _db.SaveChanges();
         }
 
@@ -69,7 +81,7 @@ namespace TastyCook.RecipesAPI
         public void DeleteById(int id, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            var recipeToDelete = _db.Recipes.FirstOrDefault(r =>r.Id == id && r.UserId == user.Id);
+            var recipeToDelete = _db.Recipes.FirstOrDefault(r => r.Id == id && r.UserId == user.Id);
             if (recipeToDelete != null)
             {
                 _db.Recipes.Remove(recipeToDelete);

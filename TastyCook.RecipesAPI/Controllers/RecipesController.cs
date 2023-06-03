@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
+using TastyCook.RecipesAPI.Services;
 using TastyCook.UsersAPI.Models;
 
 namespace TastyCook.RecipesAPI.Controllers
@@ -119,7 +120,7 @@ namespace TastyCook.RecipesAPI.Controllers
             {
                 _logger.LogInformation($"{DateTime.Now} | Start creating new recipe, title {recipe.Title}");
                 string userEmail = User.Identity.Name;
-                _recipeService.Add(new Recipe() { Name = recipe.Title, Description = recipe.Description }, userEmail);
+                _recipeService.Add(recipe, userEmail);
                 _logger.LogInformation($"{DateTime.Now} | End creating new recipe, title {recipe.Title}");
 
                 return Ok();
