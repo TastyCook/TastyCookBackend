@@ -50,7 +50,8 @@ jobs:
           git add -A
           git commit -m "Update TAG in Makefile ${{ steps.prep.outputs.tag }} for ${{ matrix.service }}"
           git fetch origin
-          git rebase origin/${{ github.ref }}
+          BRANCH=${{ github.ref#refs/heads/ }}
+          git rebase origin/$BRANCH
           git push
 
       - name: Build and push Docker image
