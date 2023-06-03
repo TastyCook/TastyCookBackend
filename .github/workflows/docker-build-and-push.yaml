@@ -19,62 +19,57 @@ jobs:
         # Add other service names as needed
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      - name: Prepare variables
+        id: prep
+        run: |
+          SERVICE_NAME=$(grep -oP '(?<=IMG \?= ${{ env.REGISTRY_LOGIN_SERVER }}/)[^\s]+' ${{ matrix.service }}/Makefile)
+          TAG=$(date +%s)
+          echo ::set-output name=service_name::$SERVICE_NAME
+          echo ::set-output name=tag::$TAG
 
-    - name: Prepare variables
-      id: prep
-      run: |
-        # This transforms long folder names to kebab-case and deletes "TastyCook" prefix
-        SERVICE_NAME=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]' | tr '.' '-')
-        TAG=$(date +%s)
-        echo ::set-output name=service_name::$SERVICE_NAME
-        echo ::set-output name=tag::$TAG
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-    - name: Login to Azure Container Registry
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-        
-    - name: Update TAG in Makefile
-      run: |
-        sed -i "s|TAG ?=.*|TAG ?= ${{ steps.prep.outputs.tag }}|" ${{ matrix.service }}/Makefile
-      
-    - name: Commit and push TAG changes
-      run: |
-        git config --global user.name 'GitHub Actions'
-        git config --global user.email 'actions@github.com'
-        git add -A
-        git commit -m "Update TAG in Makefile ${{ steps.prep.outputs.tag }} for ${{ matrix.service }}"
-        git remote set-url origin https://${{ secrets.CLOUD_PAT }}@github.com/TastyCook/TastyCookBackend.git
-        git push
-        
-    - name: Build and push Docker image
-      run: |
-        cd ${{ matrix.service }}
-        make docker-build
-        make docker-push
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    - name: Checkout YAML repo
-      uses: actions/checkout@v2
-      with:
-        repository: https://github.com/dmytrovorona/TastyCookCloud
-        token: ${{ secrets.CLOUD_PAT }}
-        path: .
+      - name: Update TAG in Makefile
+        run: |
+          sed -i "s|TAG ?=.*|TAG ?= ${{ steps.prep.outputs.tag }}|" ${{ matrix.service }}/Makefile
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add -A
+          git commit -m "Update TAG in Makefile ${{ steps.prep.outputs.tag }} for ${{ matrix.service }}"
+          git fetch origin
+          git config pull.rebase false
+          git pull
+          git push
 
-    - name: Update TAG in YAML files
-      run: |
-        find . -name '*.yaml' -exec sed -i -e "s|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:.*|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:${{ steps.prep.outputs.tag }}|" {} \;
-    
-    - name: Push changes
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "Update image tag for ${{ steps.prep.outputs.service_name }}"
-        git push
+      - name: Build and push Docker image
+        run: |
+          cd ${{ matrix.service }}
+          make docker-build
+          make docker-push
+
+      - name: Checkout YAML repo
+        uses: actions/checkout@v2
+        with:
+          repository: TastyCook/TastyCookCloud
+          token: ${{ secrets.CLOUD_PAT }}
+          path: .
+
+      - name: Update tags in cloud repo
+        run: |
+          find . -type f -name '*.yaml' -print0 | xargs -0 sed -i "s|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:[^ \"]*|image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ steps.prep.outputs.service_name }}:${{ steps.prep.outputs.tag }}|g"
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update image tag for ${{ steps.prep.outputs.service_name }}"
+          git push
