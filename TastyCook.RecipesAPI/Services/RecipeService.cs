@@ -14,25 +14,33 @@ namespace TastyCook.RecipesAPI.Services
             _db = db;
         }
 
-        public int GetAllCount()
+        public int GetAllCount(string searchValue, IEnumerable<string> filters)
         {
-            var count = _db.Recipes.Count();
+            int count = GetRecipesCountByFilters(searchValue, filters);
             return count;
         }
 
-        public int GetAllUserCount()
+        public int GetAllUserCount(string email, string searchValue, IEnumerable<string> filters)
         {
-            var count = _db.Recipes.Count();
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                return 0;
+            }
+
+            int count = GetRecipesCountByFilters(searchValue, filters, email);
             return count;
         }
 
-        public IEnumerable<Recipe> GetAll(int limit, int offset)
+        public IEnumerable<Recipe> GetAll(GetAllRecipesRequest request)
         {
-            var recipes = _db.Recipes.Include(r => r.Categories).Skip(offset).Take(limit).ToList();
-            return recipes;
+            var recipes = GetRecipesByFilters(request.SearchValue, request.Filters);
+            recipes = GetRecipesByPagination(recipes, request.Limit, request.Offset);
+
+            return recipes.ToList();
         }
 
-        public IEnumerable<Recipe> GetUserRecipes(string email, int limit, int offset)
+        public IEnumerable<Recipe> GetUserRecipes(string email, GetAllRecipesRequest request)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == email);
             if (user == null)
@@ -40,8 +48,8 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipes = _db.Recipes.Where(r => r.UserId == user.Id)
-                .Skip(offset).Take(limit).ToList();
+            var recipes = GetRecipesByFilters(request.SearchValue, request.Filters, email);
+            recipes = GetRecipesByPagination(recipes, request.Limit, request.Offset);
 
             return recipes;
         }
@@ -94,6 +102,79 @@ namespace TastyCook.RecipesAPI.Services
             var recipeDb = _db.Recipes.Find(id);
             recipeDb.Likes += isPositive ? 1 : -1;
             _db.SaveChanges();
+        }
+
+        private IEnumerable<Recipe> GetRecipesByPagination(IEnumerable<Recipe> recipes, int? limit, int? offset)
+        {
+            if (limit.HasValue && offset.HasValue)
+            {
+                recipes = recipes.Skip(offset.Value).Take(limit.Value).ToList();
+            }
+            else if (limit.HasValue && !offset.HasValue)
+            {
+                recipes = recipes.Take(limit.Value).ToList();
+            }
+            else if (!offset.HasValue && offset.HasValue)
+            {
+                recipes = recipes.Skip(offset.Value).ToList();
+            }
+
+            return recipes.ToList();
+        }
+
+        private IEnumerable<Recipe> GetRecipesByFilters(string searchValue, IEnumerable<string> filters, string email = "")
+        {
+            IQueryable<Recipe> recipes = _db.Recipes;
+            if (!string.IsNullOrEmpty(email))
+            {
+                recipes = recipes.Where(r => r.User.Email == email);
+            }
+
+            if (!string.IsNullOrEmpty(searchValue) && filters.Any())
+            {
+                recipes = recipes.Where(r => r.Name.Contains(searchValue) || r.Description.Contains(searchValue)
+                                             && r.Categories.Any(c => filters.Any(f => f == c.Name)));
+            }
+            else if (!string.IsNullOrEmpty(searchValue) && !filters.Any())
+            {
+                recipes = recipes.Where(r => r.Name.Contains(searchValue) || r.Description.Contains(searchValue));
+            }
+            else if (filters.Any())
+            {
+                recipes = recipes.Where(r => r.Categories.Any(c => filters.Any(f => f == c.Name)));
+            }
+
+            return recipes.ToList();
+        }
+
+        private int GetRecipesCountByFilters(string searchValue, IEnumerable<string> filters, string email = "")
+        {
+            int count = 0;
+            IQueryable<Recipe> recipes = _db.Recipes;
+            if (!string.IsNullOrEmpty(email))
+            {
+                recipes = recipes.Where(r => r.User.Email == email);
+            }
+            
+            if (!string.IsNullOrEmpty(searchValue) && filters.Any())
+            {
+                count = recipes.Count(r => r.Name.Contains(searchValue) || r.Description.Contains(searchValue)
+                    && r.Categories.Any(c => filters.Any(f => f == c.Name)));
+            }
+            else if (!string.IsNullOrEmpty(searchValue) && !filters.Any())
+            {
+                count = recipes.Count(r => r.Name.Contains(searchValue) || r.Description.Contains(searchValue));
+            }
+            else if (filters.Any())
+            {
+                count = recipes.Count(r => r.Categories.Any(c => filters.Any(f => f == c.Name)));
+            }
+            else
+            {
+                count = recipes.Count();
+            }
+
+            return count;
         }
     }
 }

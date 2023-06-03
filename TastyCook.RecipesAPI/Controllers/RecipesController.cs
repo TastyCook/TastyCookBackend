@@ -29,19 +29,24 @@ namespace TastyCook.RecipesAPI.Controllers
         [HttpGet]
         [AllowAnonymous]
         [Route("")]
-        public IActionResult GetAll(int limit, int offset)
+        public IActionResult GetAll([FromQuery] GetAllRecipesRequest request)
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
 
-                var recipes = _recipeService.GetAll(limit, offset);
-                var totalRecipes = _recipeService.GetAllCount();
+                var recipes = _recipeService.GetAll(request);
+                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters);
+                var totalPagesWithCurrentLimit = int.MaxValue;
+                if (request.Limit.HasValue && request.Limit > 0)
+                {
+                    totalPagesWithCurrentLimit = totalRecipes / request.Limit.Value < 1 ? 1 : totalRecipes / request.Limit.Value;
+                }
 
                 var recipesResponse = new GetRecipesResponse()
                 {
                     Recipes = recipes,
-                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                    TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
@@ -67,20 +72,25 @@ namespace TastyCook.RecipesAPI.Controllers
 
         [HttpGet]
         [Route("by-user")]
-        public IActionResult GetAllByUser(int limit, int offset)
+        public IActionResult GetAllByUser([FromQuery] GetAllRecipesRequest request)
         {
             try
             {
                 string userEmail = User.Identity.Name;
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
 
-                var recipes = _recipeService.GetUserRecipes(userEmail, limit, offset);
-                var totalRecipes = _recipeService.GetAllUserCount();
+                var recipes = _recipeService.GetUserRecipes(userEmail, request);
+                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters);
+                var totalPagesWithCurrentLimit = int.MaxValue;
+                if (request.Limit.HasValue && request.Limit > 0)
+                {
+                    totalPagesWithCurrentLimit = totalRecipes / request.Limit.Value < 1 ? 1 : totalRecipes / request.Limit.Value;
+                }
 
                 var recipesResponse = new GetRecipesResponse()
                 {
                     Recipes = recipes,
-                    TotalPagesWithCurrentLimit = totalRecipes / limit < 1 ? 1 : totalRecipes / limit
+                    TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
