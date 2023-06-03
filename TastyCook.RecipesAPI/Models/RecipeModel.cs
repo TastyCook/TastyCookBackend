@@ -7,6 +7,8 @@
         public string? Description { get; set; }
         //public IEnumerable<Products> Products { get; set; }
         public int? Likes { get; set; }
+
+        public IEnumerable<string> Categories { get; set; }
         //public byte[] Image { get; set; }
 
     }
