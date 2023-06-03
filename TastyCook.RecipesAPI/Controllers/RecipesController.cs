@@ -122,6 +122,46 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("count")]
+        public IActionResult GetAllCount([FromQuery] GetAllRecipesRequest request)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
+                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters);
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
+
+                return Ok(totalRecipes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("count/by-user")]
+        public IActionResult GetAllCountByUser([FromQuery] GetAllRecipesRequest request)
+        {
+            try
+            {
+                string userEmail = User.Identity.Name;
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
+                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters);
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
+
+                return Ok(totalRecipes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpPost("")]
         //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Add([FromBody] RecipeModel recipe)
