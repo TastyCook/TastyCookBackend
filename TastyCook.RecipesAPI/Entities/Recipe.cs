@@ -14,10 +14,8 @@ namespace TastyCook.RecipesAPI.Entities
         //public byte[] Image { get; set; }
         //public IEnumerable<RecipeUser> RecipeUsers { get; set; }
         public string UserId { get; set; }
-        [NotMapped]
-        public virtual User User { get; set; }
+        public User User { get; set; }
 
-        public int CategoryId { get; set; }
         public IEnumerable<Category> Categories { get; set; }
     }
 }
