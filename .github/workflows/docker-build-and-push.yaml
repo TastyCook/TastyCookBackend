@@ -51,6 +51,7 @@ jobs:
         git config --global user.email 'actions@github.com'
         git add -A
         git commit -m "Update TAG in Makefile ${{ steps.prep.outputs.tag }} for ${{ matrix.service }}"
+        git remote set-url origin https://${{ secrets.CLOUD_PAT }}@github.com/TastyCook/TastyCookBackend.git
         git push
         
     - name: Build and push Docker image
