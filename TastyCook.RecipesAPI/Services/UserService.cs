@@ -31,8 +31,6 @@ public class UserService
     {
         var userDb = _db.Users.Find(user.Id);
         userDb.Email = user.Email;
-        userDb.Password = string.IsNullOrWhiteSpace(user.Password) ? userDb.Password : user.Password;
-        //_db.Users.Update(user);
         _db.SaveChanges();
     }
 
