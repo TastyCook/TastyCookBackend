@@ -82,7 +82,7 @@ namespace TastyCook.UsersAPI.Controllers
                     var userFromDb = await _userManager.FindByEmailAsync(user.Email);
 
                     _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username, user.Password));
+                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username/*, user.Password*/));
                     _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                 }
 
@@ -148,7 +148,7 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, email {User.Identity.Name}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName, changePasswordModel.NewPassword));
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName/*, changePasswordModel.NewPassword*/));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, email {User.Identity.Name}");
 
                     return Ok();
@@ -192,7 +192,7 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, null));
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName/*, null*/));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
                     var newToken = await CreateTokenAsync(new UserModel() { Email = changeEmailModel.NewEmail });
 
