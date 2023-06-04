@@ -124,7 +124,7 @@ namespace TastyCook.RecipesAPI.Services
 
         private IEnumerable<Recipe> GetRecipesByFilters(string searchValue, IEnumerable<string> filters, string email = "")
         {
-            IQueryable<Recipe> recipes = _db.Recipes;
+            IQueryable<Recipe> recipes = _db.Recipes.Include(r => r.Categories);
             if (!string.IsNullOrEmpty(email))
             {
                 recipes = recipes.Where(r => r.User.Email == email);
@@ -132,7 +132,7 @@ namespace TastyCook.RecipesAPI.Services
 
             if (!string.IsNullOrEmpty(searchValue) && filters.Any())
             {
-                recipes = recipes.Where(r => r.Name.Contains(searchValue) || r.Description.Contains(searchValue)
+                recipes = recipes.Where(r => (r.Name.Contains(searchValue) || r.Description.Contains(searchValue))
                                              && r.Categories.Any(c => filters.Any(f => f == c.Name)));
             }
             else if (!string.IsNullOrEmpty(searchValue) && !filters.Any())
@@ -150,7 +150,7 @@ namespace TastyCook.RecipesAPI.Services
         private int GetRecipesCountByFilters(string searchValue, IEnumerable<string> filters, string email = "")
         {
             int count = 0;
-            IQueryable<Recipe> recipes = _db.Recipes;
+            IQueryable<Recipe> recipes = _db.Recipes.Include(r => r.Categories);
             if (!string.IsNullOrEmpty(email))
             {
                 recipes = recipes.Where(r => r.User.Email == email);
