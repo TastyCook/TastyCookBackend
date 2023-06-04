@@ -172,12 +172,16 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start changing email, oldEmail {User.Identity.Name}");
 
                 string userEmail = User.Identity.Name;
-                var user = await _userManager.FindByEmailAsync(userEmail);
-
                 if (changeEmailModel.NewEmail == userEmail)
                 {
                     _logger.LogInformation($"{DateTime.Now} | End changing email: same emails, email {userEmail}");
                     return Ok("Entered email is the same");
+                }
+
+                var user = await _userManager.FindByEmailAsync(userEmail);
+                if (user is null)
+                {
+                    return NotFound();
                 }
 
                 user.Email = changeEmailModel.NewEmail;
@@ -190,8 +194,9 @@ namespace TastyCook.UsersAPI.Controllers
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
                     await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, null));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
+                    var newToken = await CreateTokenAsync(new UserModel() { Email = changeEmailModel.NewEmail });
 
-                    return Ok();
+                    return Ok(new { Token = newToken });
                 }
 
                 return StatusCode(500, result.Errors.First());

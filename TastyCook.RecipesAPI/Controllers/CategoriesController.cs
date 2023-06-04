@@ -23,6 +23,7 @@ public class CategoriesController : ControllerBase
 
     [HttpGet]
     [Route("")]
+    [AllowAnonymous]
     public IActionResult GetAll()
     {
         try
