@@ -11,7 +11,7 @@ public class UserUpdatedConsumer : IConsumer<UserItemUpdated>
     private readonly UserService _userService;
     private readonly ILogger<UserItemUpdated> _logger;
 
-    public UserUpdatedConsumer(UserService userService, Logger<UserItemUpdated> logger)
+    public UserUpdatedConsumer(UserService userService, ILogger<UserItemUpdated> logger)
     {
         _userService = userService;
         _logger = logger;

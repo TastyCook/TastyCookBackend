@@ -15,6 +15,7 @@ using static TastyCook.Contracts.Contracts;
 namespace TastyCook.UsersAPI.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -67,6 +68,7 @@ namespace TastyCook.UsersAPI.Controllers
 
         [HttpPost]
         [Route("register")]
+        [AllowAnonymous]
         //[ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> Register([FromBody] UserModel user)
         {
@@ -97,12 +99,16 @@ namespace TastyCook.UsersAPI.Controllers
 
         [HttpPost]
         [Route("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> LogIn([FromBody] UserModel model)
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start logging in, email {model.Email}");
                 var result = !await ValidateUserAsync(model);
+
+                if (result) return NotFound("No user with this email");
+
                 var token = await CreateTokenAsync(model);
                 _logger.LogInformation($"{DateTime.Now} | End logging in, email {model.Email}");
 
@@ -201,6 +207,68 @@ namespace TastyCook.UsersAPI.Controllers
 
                 return StatusCode(500, result.Errors.First());
 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+        
+        [HttpGet]
+        [Route("current")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Get current user");
+                var result = await _userManager.FindByEmailAsync(User.Identity.Name);
+
+                return result is null ? new BadRequestObjectResult(result) : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start Get all users");
+                var result = _userManager.Users.ToList();
+                _logger.LogInformation($"{DateTime.Now} | End Get all users");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start Delete user, id: {id}");
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                {
+                    return NotFound($"There is no user with this id: {id}");
+                }
+
+                await _userManager.DeleteAsync(user);
+
+                _logger.LogInformation($"{DateTime.Now} | End Delete user, id: {id}");
+                return Ok();
             }
             catch (Exception ex)
             {
