@@ -7,17 +7,34 @@ namespace TastyCook.RecipesAPI
     {
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<RecipeUser> RecipeUsers { get; set; }
         public DbSet<Category> Categories { get; set; }
 
         public RecipesContext(DbContextOptions<RecipesContext> options) : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             //optionsBuilder
             //    .UseLazyLoadingProxies();
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<RecipeUser>().HasKey(sc => new { sc.UserId, sc.RecipeId });
+
+            modelBuilder.Entity<RecipeUser>()
+                .HasOne<Recipe>(sc => sc.Recipe)
+                .WithMany(s => s.RecipeUsers)
+                .HasForeignKey(sc => sc.RecipeId)
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+            modelBuilder.Entity<RecipeUser>()
+                .HasOne<User>(sc => sc.User)
+                .WithMany(s => s.RecipeUsers)
+                .HasForeignKey(sc => sc.UserId)
+                .OnDelete(DeleteBehavior.ClientCascade);
         }
     }
 }

@@ -11,8 +11,8 @@ using TastyCook.RecipesAPI;
 namespace TastyCook.RecipesAPI.Migrations
 {
     [DbContext(typeof(RecipesContext))]
-    [Migration("20230604183848_Remove passwords")]
-    partial class Removepasswords
+    [Migration("20230605220407_add users likes")]
+    partial class adduserslikes
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -76,6 +76,7 @@ namespace TastyCook.RecipesAPI.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
+                        .HasMaxLength(225)
                         .HasColumnType("nvarchar(225)");
 
                     b.HasKey("Id");
@@ -85,9 +86,29 @@ namespace TastyCook.RecipesAPI.Migrations
                     b.ToTable("Recipes");
                 });
 
+            modelBuilder.Entity("TastyCook.RecipesAPI.Entities.RecipeUser", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(225)
+                        .HasColumnType("nvarchar(225)");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsUserLiked")
+                        .HasColumnType("bit");
+
+                    b.HasKey("UserId", "RecipeId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeUsers");
+                });
+
             modelBuilder.Entity("TastyCook.RecipesAPI.Entities.User", b =>
                 {
                     b.Property<string>("Id")
+                        .HasMaxLength(225)
                         .HasColumnType("nvarchar(225)");
 
                     b.Property<string>("Email")
@@ -129,8 +150,34 @@ namespace TastyCook.RecipesAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TastyCook.RecipesAPI.Entities.RecipeUser", b =>
+                {
+                    b.HasOne("TastyCook.RecipesAPI.Entities.Recipe", "Recipe")
+                        .WithMany("RecipeUsers")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.HasOne("TastyCook.RecipesAPI.Entities.User", "User")
+                        .WithMany("RecipeUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TastyCook.RecipesAPI.Entities.Recipe", b =>
+                {
+                    b.Navigation("RecipeUsers");
+                });
+
             modelBuilder.Entity("TastyCook.RecipesAPI.Entities.User", b =>
                 {
+                    b.Navigation("RecipeUsers");
+
                     b.Navigation("Recipes");
                 });
 #pragma warning restore 612, 618

@@ -233,7 +233,7 @@ namespace TastyCook.RecipesAPI.Controllers
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start updating recipe likes, id: {id}");
-                _recipeService.UpdateLikes(id, model.IsPositive);
+                await _recipeService.UpdateLikesAsync(id, model.IsPositive, User.Identity.Name);
                 _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {id}");
 
                 return Ok();
@@ -255,6 +255,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 Categories = r.Categories.Select(c => c.Name),
                 Likes = r.Likes,
                 UserId = r.UserId,
+                IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == r.UserId)?.IsUserLiked ?? false,
             });
 
             return responseRecipes;

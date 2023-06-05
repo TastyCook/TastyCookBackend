@@ -8,20 +8,16 @@ using TastyCook.RecipesAPI;
 using TastyCook.RecipesAPI.Settings;
 using TastyCook.RecipesAPI.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container
-
-//builder.Services.AddDbContext<RecipesContext>(options =>
-//{
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("RecipeContext"));
-//});
 
 #if DEBUG
 Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Debug");
+Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Debug");
 #else
     Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
+    Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Production");
 #endif
+
+var builder = WebApplication.CreateBuilder(args);
 
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
 {
