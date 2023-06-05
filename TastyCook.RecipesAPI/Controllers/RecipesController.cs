@@ -107,6 +107,7 @@ namespace TastyCook.RecipesAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         //[Route("")]
         public ActionResult<Recipe> GetById(int id)
         {
