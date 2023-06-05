@@ -79,7 +79,7 @@ public class CategoriesController : ControllerBase
         }
     }
 
-    [HttpPatch]
+    [HttpDelete]
     [Route("/{id}")]
     public IActionResult DeleteCategory(int id)
     {

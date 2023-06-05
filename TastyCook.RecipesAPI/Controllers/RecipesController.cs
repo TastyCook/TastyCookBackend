@@ -40,12 +40,13 @@ namespace TastyCook.RecipesAPI.Controllers
                 var totalPagesWithCurrentLimit = int.MaxValue;
                 if (request.Limit.HasValue && request.Limit > 0)
                 {
-                    totalPagesWithCurrentLimit = totalRecipes / request.Limit.Value < 1 ? 1 : totalRecipes / request.Limit.Value;
+                    var pages = GetFlooredInt(totalRecipes, request.Limit.Value);
+                    totalPagesWithCurrentLimit = pages < 1 ? 1 : pages;
                 }
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = recipes,
+                    Recipes = MapRecipesToResponse(recipes),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -84,12 +85,13 @@ namespace TastyCook.RecipesAPI.Controllers
                 var totalPagesWithCurrentLimit = int.MaxValue;
                 if (request.Limit.HasValue && request.Limit > 0)
                 {
-                    totalPagesWithCurrentLimit = totalRecipes / request.Limit.Value < 1 ? 1 : totalRecipes / request.Limit.Value;
+                    var pages = GetFlooredInt(totalRecipes, request.Limit.Value);
+                    totalPagesWithCurrentLimit = pages < 1 ? 1 : pages;
                 }
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = recipes,
+                    Recipes = MapRecipesToResponse(recipes),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -241,5 +243,22 @@ namespace TastyCook.RecipesAPI.Controllers
                 return StatusCode(500, exc.Message);
             }
         }
+
+        private IEnumerable<RecipeModel> MapRecipesToResponse(IEnumerable<Recipe> recipes)
+        {
+            var responseRecipes = recipes.Select(r => new RecipeModel()
+            {
+                Id = r.Id,
+                Title = r.Name,
+                Description = r.Description,
+                Categories = r.Categories.Select(c => c.Name),
+                Likes = r.Likes,
+                UserId = r.UserId,
+            });
+
+            return responseRecipes;
+        }
+
+        private int GetFlooredInt(int a, int b) => (a + b - 1) / b;
     }
 }

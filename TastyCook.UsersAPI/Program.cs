@@ -121,7 +121,11 @@ builder.Services.AddSwaggerGen(options => { options.SwaggerDoc("v1", new OpenApi
 );
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(x =>
+    {
+        x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    });
+
 var app = builder.Build();
 
 
