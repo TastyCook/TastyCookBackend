@@ -114,7 +114,7 @@ namespace TastyCook.RecipesAPI.Services
             {
                 recipes = recipes.Take(limit.Value).ToList();
             }
-            else if (!offset.HasValue && offset.HasValue)
+            else if (!limit.HasValue && offset.HasValue)
             {
                 recipes = recipes.Skip(offset.Value).ToList();
             }
