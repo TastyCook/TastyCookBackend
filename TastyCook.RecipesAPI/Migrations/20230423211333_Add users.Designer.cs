@@ -45,7 +45,7 @@ namespace TastyCook.RecipesAPI.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(225)");
 
                     b.HasKey("Id");
 
@@ -57,7 +57,7 @@ namespace TastyCook.RecipesAPI.Migrations
             modelBuilder.Entity("TastyCook.RecipesAPI.Models.User", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(225)");
 
                     b.Property<string>("Email")
                         .IsRequired()

@@ -97,11 +97,26 @@ namespace TastyCook.RecipesAPI.Services
             }
         }
 
-        public void UpdateLikes(int id, bool isPositive)
+        public async Task UpdateLikesAsync(int id, bool isPositive, string email)
         {
-            var recipeDb = _db.Recipes.Find(id);
+            var recipeDb = await _db.Recipes.FindAsync(id);
             recipeDb.Likes += isPositive ? 1 : -1;
-            _db.SaveChanges();
+
+            var recipeUser = await _db.RecipeUsers.FirstOrDefaultAsync();
+            if (recipeUser != null)
+            {
+                recipeUser.IsUserLiked = isPositive;
+            }
+            else
+            {
+                var user = await _db.Users.FirstAsync(u => u.Email == email);
+                await _db.RecipeUsers.AddAsync(new RecipeUser()
+                {
+                    UserId = user.Id, RecipeId = recipeDb.Id, IsUserLiked = isPositive
+                });
+            }
+
+            await _db.SaveChangesAsync();
         }
 
         private IEnumerable<Recipe> GetRecipesByPagination(IEnumerable<Recipe> recipes, int? limit, int? offset)
@@ -124,7 +139,10 @@ namespace TastyCook.RecipesAPI.Services
 
         private IEnumerable<Recipe> GetRecipesByFilters(string searchValue, IEnumerable<string> filters, string email = "")
         {
-            IQueryable<Recipe> recipes = _db.Recipes.Include(r => r.Categories);
+            IQueryable<Recipe> recipes = _db.Recipes
+                .Include(r => r.Categories)
+                .Include(r => r.RecipeUsers);
+
             if (!string.IsNullOrEmpty(email))
             {
                 recipes = recipes.Where(r => r.User.Email == email);

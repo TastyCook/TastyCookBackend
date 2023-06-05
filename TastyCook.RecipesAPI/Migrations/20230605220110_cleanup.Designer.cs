@@ -11,8 +11,8 @@ using TastyCook.RecipesAPI;
 namespace TastyCook.RecipesAPI.Migrations
 {
     [DbContext(typeof(RecipesContext))]
-    [Migration("20230604183848_Remove passwords")]
-    partial class Removepasswords
+    [Migration("20230605220110_cleanup")]
+    partial class cleanup
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -76,6 +76,7 @@ namespace TastyCook.RecipesAPI.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
+                        .HasMaxLength(225)
                         .HasColumnType("nvarchar(225)");
 
                     b.HasKey("Id");
@@ -88,6 +89,7 @@ namespace TastyCook.RecipesAPI.Migrations
             modelBuilder.Entity("TastyCook.RecipesAPI.Entities.User", b =>
                 {
                     b.Property<string>("Id")
+                        .HasMaxLength(225)
                         .HasColumnType("nvarchar(225)");
 
                     b.Property<string>("Email")

@@ -13,7 +13,7 @@ namespace TastyCook.RecipesAPI.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "UserId",
                 table: "Recipes",
-                type: "nvarchar(450)",
+                type: "nvarchar(225)",
                 nullable: false,
                 defaultValue: "");
 
@@ -21,7 +21,7 @@ namespace TastyCook.RecipesAPI.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(225)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
