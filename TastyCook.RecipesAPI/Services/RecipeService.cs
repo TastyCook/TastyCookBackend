@@ -101,15 +101,17 @@ namespace TastyCook.RecipesAPI.Services
         {
             var recipeDb = await _db.Recipes.FindAsync(id);
             recipeDb.Likes += isPositive ? 1 : -1;
+            var user = await _db.Users.FirstAsync(u => u.Email == email);
 
-            var recipeUser = await _db.RecipeUsers.FirstOrDefaultAsync();
+            var recipeUser = await _db.RecipeUsers.Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.UserId == user.Id && x.RecipeId == id);
+
             if (recipeUser != null)
             {
                 recipeUser.IsUserLiked = isPositive;
             }
             else
             {
-                var user = await _db.Users.FirstAsync(u => u.Email == email);
                 await _db.RecipeUsers.AddAsync(new RecipeUser()
                 {
                     UserId = user.Id, RecipeId = recipeDb.Id, IsUserLiked = isPositive

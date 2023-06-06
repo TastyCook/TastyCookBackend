@@ -15,13 +15,16 @@ namespace TastyCook.RecipesAPI.Controllers
     {
         private readonly ILogger<RecipesController> _logger;
         private readonly RecipeService _recipeService;
+        private readonly UserService _userService;
         private readonly IPublishEndpoint _publishEndpoint;
 
         public RecipesController(RecipeService recipeService,
             IPublishEndpoint publishEndpoint,
-            ILogger<RecipesController> logger)
+            ILogger<RecipesController> logger,
+            UserService userService)
         {
             _recipeService = recipeService;
+            _userService = userService;
             _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
@@ -46,7 +49,7 @@ namespace TastyCook.RecipesAPI.Controllers
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = MapRecipesToResponse(recipes),
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -91,7 +94,7 @@ namespace TastyCook.RecipesAPI.Controllers
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = MapRecipesToResponse(recipes),
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -245,8 +248,10 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
-        private IEnumerable<RecipeModel> MapRecipesToResponse(IEnumerable<Recipe> recipes)
+        private IEnumerable<RecipeModel> MapRecipesToResponse(IEnumerable<Recipe> recipes, string email)
         {
+            var user = _userService.GetByEmail(email);
+
             var responseRecipes = recipes.Select(r => new RecipeModel()
             {
                 Id = r.Id,
@@ -255,7 +260,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 Categories = r.Categories.Select(c => c.Name),
                 Likes = r.Likes,
                 UserId = r.UserId,
-                IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == r.UserId)?.IsUserLiked ?? false,
+                IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
             });
 
             return responseRecipes;
