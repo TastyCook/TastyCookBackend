@@ -108,6 +108,41 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("by-user/liked")]
+        public IActionResult GetAllLikedByUser([FromQuery] GetAllRecipesRequest request)
+        {
+            try
+            {
+                string userEmail = User.Identity.Name;
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
+
+                var recipes = _recipeService.GetUserLikedRecipes(userEmail, request);
+                var totalRecipes = _recipeService.GetAllUserLikedCount(userEmail);
+                var totalPagesWithCurrentLimit = int.MaxValue;
+                if (request.Limit.HasValue && request.Limit > 0)
+                {
+                    var pages = GetFlooredInt(totalRecipes, request.Limit.Value);
+                    totalPagesWithCurrentLimit = pages < 1 ? 1 : pages;
+                }
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
+                    TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
+                };
+
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
+
+                return Ok(recipesResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpGet("{id}")]
         [AllowAnonymous]
         //[Route("")]

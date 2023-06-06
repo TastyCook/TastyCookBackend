@@ -32,12 +32,24 @@ namespace TastyCook.RecipesAPI.Services
             return count;
         }
 
+        public int GetAllUserLikedCount(string email)
+        {
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                return 0;
+            }
+
+            int count = GetLikedRecipesCountByFilters(email);
+            return count;
+        }
+
         public IEnumerable<Recipe> GetAll(GetAllRecipesRequest request)
         {
-            var recipes = GetRecipesByFilters(request.SearchValue, request.Filters);
-            recipes = GetRecipesByPagination(recipes, request.Limit, request.Offset);
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters);
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
 
-            return recipes.ToList();
+            return recipes;
         }
 
         public IEnumerable<Recipe> GetUserRecipes(string email, GetAllRecipesRequest request)
@@ -48,8 +60,24 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipes = GetRecipesByFilters(request.SearchValue, request.Filters, email);
-            recipes = GetRecipesByPagination(recipes, request.Limit, request.Offset);
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, email);
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
+
+            return recipes;
+        }
+
+        public IEnumerable<Recipe> GetUserLikedRecipes(string email, GetAllRecipesRequest request)
+        {
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                return Enumerable.Empty<Recipe>();
+            }
+
+            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), "")
+                .Where(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
+
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
 
             return recipes;
         }
@@ -125,25 +153,25 @@ namespace TastyCook.RecipesAPI.Services
             await _db.SaveChangesAsync();
         }
 
-        private IEnumerable<Recipe> GetRecipesByPagination(IEnumerable<Recipe> recipes, int? limit, int? offset)
+        private IEnumerable<Recipe> GetRecipesByPagination(IQueryable<Recipe> recipes, int? limit, int? offset)
         {
             if (limit.HasValue && offset.HasValue)
             {
-                recipes = recipes.Skip(offset.Value).Take(limit.Value).ToList();
+                recipes = recipes.Skip(offset.Value).Take(limit.Value);
             }
             else if (limit.HasValue && !offset.HasValue)
             {
-                recipes = recipes.Take(limit.Value).ToList();
+                recipes = recipes.Take(limit.Value);
             }
             else if (!limit.HasValue && offset.HasValue)
             {
-                recipes = recipes.Skip(offset.Value).ToList();
+                recipes = recipes.Skip(offset.Value);
             }
 
             return recipes.ToList();
         }
 
-        private IEnumerable<Recipe> GetRecipesByFilters(string searchValue, IEnumerable<string> filters, string email = "")
+        private IQueryable<Recipe> GetRecipesByFiltersQuery(string searchValue, IEnumerable<string> filters, string email = "")
         {
             IQueryable<Recipe> recipes = _db.Recipes
                 .Include(r => r.Categories)
@@ -168,7 +196,7 @@ namespace TastyCook.RecipesAPI.Services
                 recipes = recipes.Where(r => r.Categories.Any(c => filters.Any(f => f == c.Name)));
             }
 
-            return recipes.ToList();
+            return recipes;
         }
 
         private int GetRecipesCountByFilters(string searchValue, IEnumerable<string> filters, string email = "")
@@ -199,6 +227,17 @@ namespace TastyCook.RecipesAPI.Services
             }
 
             return count;
+        }
+
+        private int GetLikedRecipesCountByFilters(string email)
+        {
+            var user = _db.Users.First(u => u.Email == email);
+            if (!string.IsNullOrEmpty(email))
+            {
+                return _db.Recipes.Count(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
+            }
+
+            return 0;
         }
     }
 }
