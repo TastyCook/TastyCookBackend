@@ -20,6 +20,7 @@ namespace TastyCook.UsersAPI.Controllers
     {
         private readonly ILogger<UserController> _logger;
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly IPublishEndpoint _publishEndpoint;
 
@@ -27,12 +28,14 @@ namespace TastyCook.UsersAPI.Controllers
         public UserController(UserManager<User> userManager,
             IConfiguration configuration,
             IPublishEndpoint publishEndpoint,
-            ILogger<UserController> logger)
+            ILogger<UserController> logger,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _configuration = configuration;
             _publishEndpoint = publishEndpoint;
             _logger = logger;
+            _roleManager = roleManager;
         }
 
         public class AuthenticateRequest
@@ -222,9 +225,10 @@ namespace TastyCook.UsersAPI.Controllers
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Get current user");
-                var result = await _userManager.FindByEmailAsync(User.Identity.Name);
+                var user = await _userManager.FindByEmailAsync(User.Identity.Name);
+                var userResponse = await MapUserToResponse(user);
 
-                return result is null ? new BadRequestObjectResult(result) : Ok(result);
+                return userResponse is null ? new BadRequestObjectResult(userResponse) : Ok(userResponse);
             }
             catch (Exception ex)
             {
@@ -235,15 +239,17 @@ namespace TastyCook.UsersAPI.Controllers
 
         [HttpGet]
         [Route("")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start Get all users");
-                var result = _userManager.Users.ToList();
+                var users = _userManager.Users.ToList();
+                var usersResponse = await MapUsersToResponse(users);
                 _logger.LogInformation($"{DateTime.Now} | End Get all users");
 
-                return Ok(result);
+                return Ok(usersResponse);
             }
             catch (Exception ex)
             {
@@ -329,5 +335,35 @@ namespace TastyCook.UsersAPI.Controllers
             );
             return tokenOptions;
         }
+
+        private async Task<UserResponseModel> MapUserToResponse(User user)
+        {
+            return new UserResponseModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                IsAdmin = await _userManager.IsInRoleAsync(user, "Admin")
+            };
+        }
+
+        private async Task<IEnumerable<UserResponseModel>> MapUsersToResponse(IEnumerable<User> users)
+        {
+            var usersResponse = new List<UserResponseModel>();
+            foreach (var user in users)
+            {
+                usersResponse.Add(new UserResponseModel
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        UserName = user.UserName,
+                        IsAdmin = await _userManager.IsInRoleAsync(user, "Admin")
+                    }
+                );
+            }
+
+            return usersResponse;
+        }
+
     }
 }
