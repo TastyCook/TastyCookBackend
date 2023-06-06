@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Services;
-using TastyCook.UsersAPI.Models;
 
 namespace TastyCook.RecipesAPI.Controllers
 {
@@ -15,13 +14,16 @@ namespace TastyCook.RecipesAPI.Controllers
     {
         private readonly ILogger<RecipesController> _logger;
         private readonly RecipeService _recipeService;
+        private readonly UserService _userService;
         private readonly IPublishEndpoint _publishEndpoint;
 
         public RecipesController(RecipeService recipeService,
             IPublishEndpoint publishEndpoint,
-            ILogger<RecipesController> logger)
+            ILogger<RecipesController> logger,
+            UserService userService)
         {
             _recipeService = recipeService;
+            _userService = userService;
             _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
@@ -46,7 +48,7 @@ namespace TastyCook.RecipesAPI.Controllers
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = MapRecipesToResponse(recipes),
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -91,7 +93,42 @@ namespace TastyCook.RecipesAPI.Controllers
 
                 var recipesResponse = new GetRecipesResponse()
                 {
-                    Recipes = MapRecipesToResponse(recipes),
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
+                    TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
+                };
+
+                _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
+
+                return Ok(recipesResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("by-user/liked")]
+        public IActionResult GetAllLikedByUser([FromQuery] GetAllRecipesRequest request)
+        {
+            try
+            {
+                string userEmail = User.Identity.Name;
+                _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
+
+                var recipes = _recipeService.GetUserLikedRecipes(userEmail, request);
+                var totalRecipes = _recipeService.GetAllUserLikedCount(userEmail);
+                var totalPagesWithCurrentLimit = int.MaxValue;
+                if (request.Limit.HasValue && request.Limit > 0)
+                {
+                    var pages = GetFlooredInt(totalRecipes, request.Limit.Value);
+                    totalPagesWithCurrentLimit = pages < 1 ? 1 : pages;
+                }
+
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = MapRecipesToResponse(recipes, User.Identity.Name),
                     TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
                 };
 
@@ -109,14 +146,15 @@ namespace TastyCook.RecipesAPI.Controllers
         [HttpGet("{id}")]
         [AllowAnonymous]
         //[Route("")]
-        public ActionResult<Recipe> GetById(int id)
+        public ActionResult<RecipeModel> GetById(int id)
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start getting recipe by id {id}");
                 var recipe = _recipeService.GetById(id);
+                var recipeResponse = MapRecipeToResponse(recipe, User.Identity.Name);
                 _logger.LogInformation($"{DateTime.Now} | End getting recipe by id {id}");
-                return recipe;
+                return recipeResponse;
             }
             catch (Exception exc)
             {
@@ -228,12 +266,12 @@ namespace TastyCook.RecipesAPI.Controllers
 
         [HttpPatch("{id}/likes")]
         //[ValidateAntiForgeryToken]
-        public async Task<ActionResult> IncrementLikes(int id, [FromBody] ChangeLikesModel model)
+        public async Task<ActionResult> ChangeLikeForRecipe(int id)
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start updating recipe likes, id: {id}");
-                await _recipeService.UpdateLikesAsync(id, model.IsPositive, User.Identity.Name);
+                await _recipeService.UpdateLikesAsync(id, User.Identity.Name);
                 _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {id}");
 
                 return Ok();
@@ -245,20 +283,40 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
-        private IEnumerable<RecipeModel> MapRecipesToResponse(IEnumerable<Recipe> recipes)
+        private IEnumerable<RecipeModel> MapRecipesToResponse(IEnumerable<Recipe> recipes, string email)
         {
+            var user = _userService.GetByEmail(email);
+
             var responseRecipes = recipes.Select(r => new RecipeModel()
             {
                 Id = r.Id,
                 Title = r.Name,
                 Description = r.Description,
-                Categories = r.Categories.Select(c => c.Name),
+                Categories = r.Categories?.Select(c => c.Name),
                 Likes = r.Likes,
                 UserId = r.UserId,
-                IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == r.UserId)?.IsUserLiked ?? false,
+                IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
             });
 
             return responseRecipes;
+        }
+
+        private RecipeModel MapRecipeToResponse(Recipe recipe, string email)
+        {
+            var user = _userService.GetByEmail(email);
+
+            var responseRecipe = new RecipeModel()
+            {
+                Id = recipe.Id,
+                Title = recipe.Name,
+                Description = recipe.Description,
+                Categories = recipe.Categories?.Select(c => c.Name),
+                Likes = recipe.Likes,
+                UserId = recipe.UserId,
+                IsUserLiked = recipe.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
+            };
+
+            return responseRecipe;
         }
 
         private int GetFlooredInt(int a, int b) => (a + b - 1) / b;
