@@ -34,6 +34,7 @@ else
         options.UseSqlServer(builder.Configuration.GetConnectionString("UserContextProd")));
 }
 
+//builder.Services.AddTransient<UserContext>();
 
 builder.Services.AddMassTransit(x =>
 {
@@ -130,6 +131,8 @@ builder.Services.AddControllers().AddNewtonsoftJson(x =>
     });
 
 var app = builder.Build();
+
+await SeedHelper.Initialize(app.Services);
 
 
 // Configure the HTTP request pipeline.
