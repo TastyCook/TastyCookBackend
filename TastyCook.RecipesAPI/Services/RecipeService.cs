@@ -56,7 +56,11 @@ namespace TastyCook.RecipesAPI.Services
 
         public Recipe GetById(int id)
         {
-            return _db.Recipes.FirstOrDefault(r => r.Id == id);
+            var recipe = _db.Recipes.Include(r => r.Categories)
+                .Include(r => r.RecipeUsers)
+                .FirstOrDefault(r => r.Id == id);
+
+            return recipe ?? throw new Exception("There is no such recipe");
         }
 
         public void Add(RecipeModel recipe, string userEmail)
@@ -97,24 +101,24 @@ namespace TastyCook.RecipesAPI.Services
             }
         }
 
-        public async Task UpdateLikesAsync(int id, bool isPositive, string email)
+        public async Task UpdateLikesAsync(int id, string email)
         {
             var recipeDb = await _db.Recipes.FindAsync(id);
-            recipeDb.Likes += isPositive ? 1 : -1;
             var user = await _db.Users.FirstAsync(u => u.Email == email);
-
             var recipeUser = await _db.RecipeUsers.Include(x => x.User)
                 .FirstOrDefaultAsync(x => x.UserId == user.Id && x.RecipeId == id);
 
             if (recipeUser != null)
             {
-                recipeUser.IsUserLiked = isPositive;
+                recipeDb.Likes += recipeUser.IsUserLiked ? -1 : 1;
+                recipeUser.IsUserLiked = !recipeUser.IsUserLiked;
             }
             else
             {
+                recipeDb.Likes += 1;
                 await _db.RecipeUsers.AddAsync(new RecipeUser()
                 {
-                    UserId = user.Id, RecipeId = recipeDb.Id, IsUserLiked = isPositive
+                    UserId = user.Id, RecipeId = recipeDb.Id, IsUserLiked = true
                 });
             }
 
