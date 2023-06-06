@@ -184,7 +184,7 @@ namespace TastyCook.UsersAPI.Controllers
                 if (changeEmailModel.NewEmail == userEmail)
                 {
                     _logger.LogInformation($"{DateTime.Now} | End changing email: same emails, email {userEmail}");
-                    return Ok("Entered email is the same");
+                    return BadRequest("Entered email is the same");
                 }
 
                 var user = await _userManager.FindByEmailAsync(userEmail);
