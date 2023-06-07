@@ -70,7 +70,7 @@ namespace TastyCook.UsersAPI.Controllers
                         var userFromDb = await _userManager.FindByEmailAsync(payload.Email);
 
                         _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                        await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name/*, user.Password*/));
+                        await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name));
                         _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                     }
                 }
@@ -110,7 +110,7 @@ namespace TastyCook.UsersAPI.Controllers
                     var userFromDb = await _userManager.FindByEmailAsync(user.Email);
 
                     _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username/*, user.Password*/));
+                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username));
                     _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                 }
 
@@ -133,7 +133,7 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start logging in, email {model.Email}");
                 var result = !await ValidateUserAsync(model);
 
-                if (result) return NotFound("No user with this email");
+                if (result) return NotFound("No such email or some fields are incorrect");
 
                 var token = await CreateTokenAsync(model);
                 _logger.LogInformation($"{DateTime.Now} | End logging in, email {model.Email}");
@@ -180,7 +180,7 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, email {User.Identity.Name}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName/*, changePasswordModel.NewPassword*/));
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, email {User.Identity.Name}");
 
                     return Ok();
@@ -224,7 +224,7 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName/*, null*/));
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
                     var newToken = await CreateTokenAsync(new UserModel() { Email = changeEmailModel.NewEmail });
 
@@ -304,6 +304,88 @@ namespace TastyCook.UsersAPI.Controllers
 
                 _logger.LogInformation($"{DateTime.Now} | End Delete user, id: {id}");
                 return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut]
+        [Route("{userId}/change-password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ChangePasswordAdmin(string userId, [FromBody] ChangePasswordModel changePasswordModel)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start changing password, id {userId}");
+
+                if (changePasswordModel.NewPassword != changePasswordModel.RepeatNewPassword)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | End changing passwords: different passwords, id {userId}");
+                    return BadRequest("Passwords must be the same.");
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, changePasswordModel.NewPassword);
+
+                _logger.LogInformation($"{DateTime.Now} | End changing passwords, id {userId}");
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, id {userId}");
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName));
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, id {userId}");
+
+                    return Ok();
+                }
+
+                return BadRequest(result.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut]
+        [Route("{userId}/change-email")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ChangeEmailAdmin(string userId, [FromBody] ChangeEmailModel changeEmailModel)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start changing email, id {userId}");
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user is null)
+                {
+                    return NotFound();
+                }
+
+                user.Email = changeEmailModel.NewEmail;
+                var result = await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation($"{DateTime.Now} | End changing email, id {userId}");
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, id {userId}");
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName));
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, id {userId}");
+
+                    return Ok();
+                }
+
+                return StatusCode(500, result.Errors.First());
+
             }
             catch (Exception ex)
             {
