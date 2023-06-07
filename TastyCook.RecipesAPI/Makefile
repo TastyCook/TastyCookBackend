@@ -1,5 +1,5 @@
 ﻿IMG ?= tastycook.azurecr.io/recipes-api
-TAG ?= 1686090546
+TAG ?= 1686172125
 
 .PHONY: docker-build
 docker-build:
