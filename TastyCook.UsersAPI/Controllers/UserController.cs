@@ -57,7 +57,6 @@ namespace TastyCook.UsersAPI.Controllers
 
                 GoogleJsonWebSignature.Payload payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
 
-                payload.Email = payload.Email + "t";
                 var user = await _userManager.FindByEmailAsync(payload.Email);
                 if (user == null)
                 {
@@ -73,6 +72,10 @@ namespace TastyCook.UsersAPI.Controllers
                         await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name/*, user.Password*/));
                         _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                     }
+                }
+                else if (!string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    return BadRequest("There is already account with this email");
                 }
 
                 var token = await CreateTokenAsync(new UserModel() { Email = payload.Email });
@@ -305,9 +308,9 @@ namespace TastyCook.UsersAPI.Controllers
         private async Task<bool> ValidateUserAsync(UserModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (string.IsNullOrEmpty(user.PasswordHash) == string.IsNullOrEmpty(model.Password))
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                return true;
+                return false;
             }
 
             var result = user != null && await _userManager.CheckPasswordAsync(user, model.Password);
