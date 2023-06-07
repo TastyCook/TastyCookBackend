@@ -115,6 +115,11 @@ namespace TastyCook.RecipesAPI.Services
             var recipeDb = _db.Recipes.Find(recipe.Id);
             recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
             recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
+
+            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name))
+                .ToList();
+
+            recipeDb.Categories = categories;
             _db.SaveChanges();
         }
 

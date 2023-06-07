@@ -53,9 +53,28 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start authentication with Google account {data.IdToken}");
                 GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-                settings.Audience = new List<string>() { "949493455412-lab5qmkch79a6ilg7u9vrin4lbhe024q.apps.googleusercontent.com" };
+                settings.Audience = new List<string>() { "831416949571-31eonrv6akqo426nnrrmjar8htnguboa.apps.googleusercontent.com" };
 
                 GoogleJsonWebSignature.Payload payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
+
+                payload.Email = payload.Email + "t";
+                var user = await _userManager.FindByEmailAsync(payload.Email);
+                if (user == null)
+                {
+                    User identityUser = new User { Email = payload.Email, UserName = payload.Name };
+                    var result = await _userManager.CreateAsync(identityUser);
+
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation($"{DateTime.Now} | User successfully created, email {payload.Email}");
+                        var userFromDb = await _userManager.FindByEmailAsync(payload.Email);
+
+                        _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
+                        await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name/*, user.Password*/));
+                        _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
+                    }
+                }
+
                 var token = await CreateTokenAsync(new UserModel() { Email = payload.Email });
                 _logger.LogInformation($"{DateTime.Now} | Successful authentication with Google account {data.IdToken}");
 
@@ -286,6 +305,11 @@ namespace TastyCook.UsersAPI.Controllers
         private async Task<bool> ValidateUserAsync(UserModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
+            if (string.IsNullOrEmpty(user.PasswordHash) == string.IsNullOrEmpty(model.Password))
+            {
+                return true;
+            }
+
             var result = user != null && await _userManager.CheckPasswordAsync(user, model.Password);
             return result;
         }
