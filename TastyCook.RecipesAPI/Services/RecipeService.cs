@@ -94,7 +94,7 @@ namespace TastyCook.RecipesAPI.Services
         public void Add(RecipeModel recipe, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name))
+            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name)).Distinct()
                 .ToList();
 
             var dbRecipe = new Recipe
@@ -111,10 +111,15 @@ namespace TastyCook.RecipesAPI.Services
 
         public void Update(RecipeModel recipe, string userEmail)
         {
-            var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
+            //var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
             var recipeDb = _db.Recipes.Find(recipe.Id);
             recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
             recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
+
+            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name)).Distinct()
+                .ToList();
+
+            recipeDb.Categories = categories;
             _db.SaveChanges();
         }
 
