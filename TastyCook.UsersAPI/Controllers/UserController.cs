@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
+using static MassTransit.ValidationResultExtensions;
 using static TastyCook.Contracts.Contracts;
 
 namespace TastyCook.UsersAPI.Controllers
@@ -280,7 +281,7 @@ namespace TastyCook.UsersAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -293,7 +294,13 @@ namespace TastyCook.UsersAPI.Controllers
                     return NotFound($"There is no user with this id: {id}");
                 }
 
-                await _userManager.DeleteAsync(user);
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, email {User.Identity.Name}");
+                    await _publishEndpoint.Publish(new UserItemDeleted(user.Id));
+                    _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, email {User.Identity.Name}");
+                }
 
                 _logger.LogInformation($"{DateTime.Now} | End Delete user, id: {id}");
                 return Ok();
