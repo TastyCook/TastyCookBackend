@@ -82,11 +82,16 @@ namespace TastyCook.RecipesAPI.Services
             return recipes;
         }
 
-        public Recipe GetById(int id)
+        public Recipe GetById(int id, Localization localization)
         {
             var recipe = _db.Recipes.Include(r => r.Categories)
                 .Include(r => r.RecipeUsers)
                 .FirstOrDefault(r => r.Id == id);
+
+            if (localization != Localization.None)
+            {
+                recipe.Categories = recipe.Categories.Where(c => c.Localization == localization);
+            }
 
             return recipe ?? throw new Exception("There is no such recipe");
         }
@@ -189,7 +194,8 @@ namespace TastyCook.RecipesAPI.Services
 
             if (localization != Localization.None)
             {
-                recipes = recipes.Where(r => r.Localization == localization);
+                recipes = recipes.Where(r => r.Localization == localization)
+                    .Select(r => new Recipe(r) { Categories = r.Categories.Where(c => c.Localization == localization)});
             }
 
             if (!string.IsNullOrEmpty(email))

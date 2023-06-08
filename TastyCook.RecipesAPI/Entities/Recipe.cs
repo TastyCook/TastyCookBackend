@@ -17,5 +17,21 @@ namespace TastyCook.RecipesAPI.Entities
         public User User { get; set; }
         public IEnumerable<Category> Categories { get; set; }
         public IEnumerable<RecipeUser> RecipeUsers { get; set; }
+
+
+        public Recipe() { }
+
+        public Recipe(Recipe recipe)
+        {
+            Id = recipe.Id;
+            Name = recipe.Name;
+            Description = recipe.Description;
+            Likes = recipe.Likes;
+            Localization = recipe.Localization;
+            UserId = recipe.UserId;
+            User = recipe.User;
+            Categories = recipe.Categories;
+            RecipeUsers = recipe.RecipeUsers;
+        }
     }
 }

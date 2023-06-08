@@ -146,12 +146,12 @@ namespace TastyCook.RecipesAPI.Controllers
         [HttpGet("{id}")]
         [AllowAnonymous]
         //[Route("")]
-        public ActionResult<RecipeModel> GetById(int id)
+        public ActionResult<RecipeModel> GetById(int id, Localization localization)
         {
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start getting recipe by id {id}");
-                var recipe = _recipeService.GetById(id);
+                var recipe = _recipeService.GetById(id, localization);
                 var recipeResponse = MapRecipeToResponse(recipe, User.Identity.Name);
                 _logger.LogInformation($"{DateTime.Now} | End getting recipe by id {id}");
                 return recipeResponse;
