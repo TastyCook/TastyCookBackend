@@ -38,7 +38,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
 
                 var recipes = _recipeService.GetAll(request);
-                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters);
+                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters, request.Localization);
                 var totalPagesWithCurrentLimit = int.MaxValue;
                 if (request.Limit.HasValue && request.Limit > 0)
                 {
@@ -83,7 +83,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
 
                 var recipes = _recipeService.GetUserRecipes(userEmail, request);
-                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters);
+                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters, request.Localization);
                 var totalPagesWithCurrentLimit = int.MaxValue;
                 if (request.Limit.HasValue && request.Limit > 0)
                 {
@@ -118,7 +118,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
 
                 var recipes = _recipeService.GetUserLikedRecipes(userEmail, request);
-                var totalRecipes = _recipeService.GetAllUserLikedCount(userEmail);
+                var totalRecipes = _recipeService.GetAllUserLikedCount(userEmail, request.Localization);
                 var totalPagesWithCurrentLimit = int.MaxValue;
                 if (request.Limit.HasValue && request.Limit > 0)
                 {
@@ -171,7 +171,7 @@ namespace TastyCook.RecipesAPI.Controllers
             try
             {
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes");
-                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters);
+                var totalRecipes = _recipeService.GetAllCount(request.SearchValue, request.Filters, request.Localization);
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
 
                 return Ok(totalRecipes);
@@ -191,7 +191,7 @@ namespace TastyCook.RecipesAPI.Controllers
             {
                 string userEmail = User.Identity.Name;
                 _logger.LogInformation($"{DateTime.Now} | Start getting all recipes by user {userEmail}");
-                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters);
+                var totalRecipes = _recipeService.GetAllUserCount(userEmail, request.SearchValue, request.Filters, request.Localization);
                 _logger.LogInformation($"{DateTime.Now} | End getting all recipes by user {userEmail}");
 
                 return Ok(totalRecipes);
@@ -296,6 +296,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 Likes = r.Likes,
                 UserId = r.UserId,
                 IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
+                Localization = r.Localization
             });
 
             return responseRecipes;
@@ -314,6 +315,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 Likes = recipe.Likes,
                 UserId = recipe.UserId,
                 IsUserLiked = recipe.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
+                Localization = recipe.Localization
             };
 
             return responseRecipe;

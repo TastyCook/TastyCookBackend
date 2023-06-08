@@ -7,4 +7,5 @@ public class GetAllRecipesRequest
     //public RecipesFilters? RecipesFilters { get; set; }
     public string? SearchValue { get; set; }
     public string[] Filters { get; set; } = Array.Empty<string>();
+    public Localization Localization { get; set; }
 }
