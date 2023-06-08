@@ -112,7 +112,9 @@ namespace TastyCook.RecipesAPI.Services
         public void Update(RecipeModel recipe, string userEmail)
         {
             //var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            var recipeDb = _db.Recipes.Find(recipe.Id);
+            var recipeDb = _db.Recipes.Include(r => r.Categories)
+                .FirstOrDefault(r => r.Id == recipe.Id);
+
             recipeDb.Description = string.IsNullOrWhiteSpace(recipe.Description) ? recipeDb.Description : recipe.Description;
             recipeDb.Name = string.IsNullOrWhiteSpace(recipe.Title) ? recipeDb.Name : recipe.Title;
 
