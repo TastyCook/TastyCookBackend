@@ -7,7 +7,7 @@ using TastyCook.RecipesAPI.Services;
 namespace TastyCook.RecipesAPI.Controllers;
 
 [ApiController]
-[Route("/api/categories")]
+[Route("/api/[controller]")]
 [Authorize]
 public class CategoriesController : ControllerBase
 {

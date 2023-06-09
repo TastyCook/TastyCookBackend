@@ -1,6 +1,5 @@
 ﻿using MassTransit;
 using TastyCook.RecipesAPI.Entities;
-using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Services;
 using static TastyCook.Contracts.Contracts;
 
