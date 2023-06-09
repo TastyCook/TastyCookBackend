@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
@@ -130,6 +131,30 @@ namespace TastyCook.RecipesAPI.Services
 
             recipeDb.Categories = categories;
             _db.SaveChanges();
+        }
+
+        public async Task UpdateImage(int id, IFormFile data)
+        {
+            //var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
+            var recipeDb = _db.Recipes.FirstOrDefault(r => r.Id == id);
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await data.CopyToAsync(memoryStream);
+
+                if (memoryStream.Length < 209715200)
+                {
+                    var file = memoryStream.ToArray();
+
+                    recipeDb.Image = file;
+                }
+                else
+                {
+                    throw new Exception("File is too big");
+                }
+            }
+
+            await _db.SaveChangesAsync();
         }
 
         public void DeleteById(int id, string userEmail)
