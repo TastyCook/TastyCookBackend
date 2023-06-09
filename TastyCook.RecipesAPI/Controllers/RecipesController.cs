@@ -1,9 +1,12 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Services;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TastyCook.RecipesAPI.Controllers
 {
@@ -273,6 +276,44 @@ namespace TastyCook.RecipesAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start updating recipe likes, id: {id}");
                 await _recipeService.UpdateLikesAsync(id, User.Identity.Name);
                 _logger.LogInformation($"{DateTime.Now} | End updating new recipe, id: {id}");
+
+                return Ok();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
+            }
+        }
+
+        [HttpGet("{id}/image")]
+        [AllowAnonymous]
+        public ActionResult<RecipeModel> GetImageById(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start getting recipe image by id {id}");
+                var recipe = _recipeService.GetById(id, Localization.None);
+                
+                _logger.LogInformation($"{DateTime.Now} | End getting recipe image by id {id}");
+                return File(recipe.Image, "image/png");
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                return StatusCode(500, exc.Message);
+            }
+        }
+
+        [HttpPatch]
+        [Route("{id}/image")]
+        public async Task<IActionResult> Upload(int id, IFormFile data)
+        {
+            try
+            {
+                _logger.LogInformation($"{DateTime.Now} | Start updating image, id: {id}");
+                await _recipeService.UpdateImage(id, data);
+                _logger.LogInformation($"{DateTime.Now} | End updating image, id: {id}");
 
                 return Ok();
             }
