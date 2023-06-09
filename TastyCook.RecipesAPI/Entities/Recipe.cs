@@ -17,6 +17,7 @@ namespace TastyCook.RecipesAPI.Entities
         public User User { get; set; }
         public IEnumerable<Category> Categories { get; set; }
         public IEnumerable<RecipeUser> RecipeUsers { get; set; }
+        public IEnumerable<Comment> Comments { get; set; }
 
 
         public Recipe() { }
@@ -32,6 +33,7 @@ namespace TastyCook.RecipesAPI.Entities
             User = recipe.User;
             Categories = recipe.Categories;
             RecipeUsers = recipe.RecipeUsers;
+            Comments = recipe.Comments;
         }
     }
 }

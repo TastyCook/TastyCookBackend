@@ -9,6 +9,7 @@ namespace TastyCook.RecipesAPI
         public DbSet<User> Users { get; set; }
         public DbSet<RecipeUser> RecipeUsers { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         public RecipesContext(DbContextOptions<RecipesContext> options) : base(options)
         {
@@ -35,6 +36,13 @@ namespace TastyCook.RecipesAPI
                 .WithMany(s => s.RecipeUsers)
                 .HasForeignKey(sc => sc.UserId)
                 .OnDelete(DeleteBehavior.ClientCascade);
+
+
+            modelBuilder.Entity<User>()
+                .HasMany<Comment>(u => u.Comments)
+                .WithOne(c => c.User)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.ClientNoAction);
         }
     }
 }

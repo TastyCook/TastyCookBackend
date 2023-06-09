@@ -8,7 +8,7 @@ using TastyCook.RecipesAPI.Services;
 namespace TastyCook.RecipesAPI.Controllers
 {
     [ApiController]
-    [Route("/api/recipes")]
+    [Route("/api/[controller]")]
     [Authorize]
     public class RecipesController : ControllerBase
     {

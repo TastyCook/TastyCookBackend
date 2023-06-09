@@ -1,12 +1,12 @@
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using TastyCook.RecipesAPI;
-using TastyCook.RecipesAPI.Settings;
 using TastyCook.RecipesAPI.Services;
+using TastyCook.RecipesAPI.Settings;
 
 
 #if DEBUG
@@ -35,6 +35,7 @@ else
 builder.Services.AddScoped<CategoriesService>();
 builder.Services.AddScoped<RecipeService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<CommentsService>();
 // To apply migration automatically.
 //builder.Services.BuildServiceProvider().GetService<RecipesContext>().Database.Migrate();
 
