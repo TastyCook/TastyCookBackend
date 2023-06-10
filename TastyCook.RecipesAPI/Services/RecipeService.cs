@@ -48,7 +48,11 @@ namespace TastyCook.RecipesAPI.Services
         public IEnumerable<Recipe> GetAll(GetAllRecipesRequest request)
         {
             var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization);
-            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset)
+                .Select(r => new Recipe(r)
+                {
+                    Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
+                }).ToList();
 
             return recipes;
         }
@@ -62,7 +66,10 @@ namespace TastyCook.RecipesAPI.Services
             }
 
             var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, email);
-            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r => new Recipe(r)
+            {
+                Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
+            }).ToList();
 
             return recipes;
         }
@@ -77,11 +84,10 @@ namespace TastyCook.RecipesAPI.Services
 
             var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, "");
 
-            var tt = recipesQuery.ToList().Where(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
-            var t = recipesQuery
-                .Where(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
-
-            var recipes = GetRecipesByPagination(t, request.Limit, request.Offset);
+            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r => new Recipe(r)
+            {
+                Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
+            }).ToList();
 
             return recipes;
         }
@@ -213,11 +219,7 @@ namespace TastyCook.RecipesAPI.Services
 
             if (localization != Localization.None)
             {
-                recipes = recipes.Where(r => r.Localization == localization)
-                    .Select(r => new Recipe(r)
-                        {
-                            Categories = r.Categories.Where(c => c.Localization == localization).ToList()
-                        }).ToList().AsQueryable();
+                recipes = recipes.Where(r => r.Localization == localization);
             }
 
             if (!string.IsNullOrEmpty(email))
