@@ -12,6 +12,6 @@ namespace TastyCook.ProductsAPI.Entities
         public int ProductId { get; set; }
         public Product Product { get; set; }
         public string Amount { get; set; }
-        public string Type { get; set; }
+        public string? Type { get; set; }
     }
 }

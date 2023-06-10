@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace TastyCook.ProductsAPI.Entities
+﻿namespace TastyCook.ProductsAPI.Entities
 {
     public class Recipe
     {
