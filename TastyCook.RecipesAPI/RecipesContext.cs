@@ -5,11 +5,11 @@ namespace TastyCook.RecipesAPI
 {
     public class RecipesContext : DbContext
     {
-        public DbSet<Recipe> Recipes { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<RecipeUser> RecipeUsers { get; set; }
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<Comment> Comments { get; set; }
+        public virtual DbSet<Recipe> Recipes { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<RecipeUser> RecipeUsers { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
+        public virtual DbSet<Comment> Comments { get; set; }
 
         public RecipesContext(DbContextOptions<RecipesContext> options) : base(options)
         {
