@@ -3,7 +3,7 @@ name: UsersAPI build and push
 on:
   push:
     branches:
-      - split-workflow
+      - main
     paths:
       - 'TastyCook.UsersAPI/**'
 
