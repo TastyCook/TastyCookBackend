@@ -42,6 +42,11 @@ public class UserService
     public void DeleteById(string id)
     {
         var userToDelete = _db.Users.FirstOrDefault(r => r.Id == id);
+        
+        var recipesUsers = _db.RecipeUsers.Where(ru => ru.UserId == id).ToList();
+        _db.RecipeUsers.RemoveRange(recipesUsers);
+        _db.SaveChanges();
+
         if (userToDelete != null)
         {
             _db.Users.Remove(userToDelete);

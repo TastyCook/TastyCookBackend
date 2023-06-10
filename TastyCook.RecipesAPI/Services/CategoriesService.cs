@@ -34,6 +34,7 @@ public class CategoriesService
     {
         var categoryDb = _db.Categories.Find(category.Id);
         categoryDb.Name = category.Name;
+        categoryDb.Localization = category.Localization;
         _db.SaveChanges();
     }
 

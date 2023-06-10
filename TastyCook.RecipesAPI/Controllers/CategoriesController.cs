@@ -48,7 +48,7 @@ public class CategoriesController : ControllerBase
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new category");
-            _categoriesService.Add(new Category() { Name = model.Name });
+            _categoriesService.Add(new Category() { Name = model.Name, Localization = model.Localization});
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();
@@ -61,13 +61,14 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPatch]
-    [Route("/{id}")]
+    [Route("{id}")]
     public IActionResult UpdateCategory(int id, [FromBody] CategoryModel model)
     {
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new category");
-            _categoriesService.Update(new Category() { Id = model.Id, Name = model.Name });
+            model.Id = id;
+            _categoriesService.Update(new Category() { Id = model.Id, Name = model.Name, Localization = model.Localization });
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();
@@ -80,7 +81,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete]
-    [Route("/{id}")]
+    [Route("{id}")]
     public IActionResult DeleteCategory(int id)
     {
         try
