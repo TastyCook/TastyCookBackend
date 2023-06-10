@@ -161,6 +161,11 @@ namespace TastyCook.RecipesAPI.Services
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
             var recipeToDelete = _db.Recipes.FirstOrDefault(r => r.Id == id && r.UserId == user.Id);
+
+            var recipesUsers = _db.RecipeUsers.Where(ru => ru.RecipeId == id).ToList();
+            _db.RecipeUsers.RemoveRange(recipesUsers);
+            _db.SaveChanges();
+
             if (recipeToDelete != null)
             {
                 _db.Recipes.Remove(recipeToDelete);
