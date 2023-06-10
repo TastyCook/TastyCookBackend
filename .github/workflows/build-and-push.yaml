@@ -54,6 +54,9 @@ jobs:
           git config user.email 'actions@github.com'
           git add -A
           git commit -m "Update ${{ steps.prep.outputs.service_name }} image tag to ${{ steps.prep.outputs.tag }}"
+          git fetch origin
+          git config pull.rebase false
+          git pull
           git push
 
       - name: Build and push Docker image
