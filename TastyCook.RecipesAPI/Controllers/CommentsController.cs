@@ -32,7 +32,7 @@ public class CommentsController : ControllerBase
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start getting all comments, recipeId: {recipeId}");
-            var comments = MapCommentToModel(_commentsService.GetByRecipeId(recipeId));
+            var comments = MapCommentsToModel(_commentsService.GetByRecipeId(recipeId));
             _logger.LogInformation($"{DateTime.Now} | End getting all comments, recipeId: {recipeId}");
 
             return Ok(comments);
@@ -119,7 +119,7 @@ public class CommentsController : ControllerBase
         return commentModel;
     }
 
-    public IEnumerable<CommentModel> MapCommentToModel(IEnumerable<Comment> comments)
+    public IEnumerable<CommentModel> MapCommentsToModel(IEnumerable<Comment> comments)
     {
         var commentModels = comments.Select(c => new CommentModel()
         {
