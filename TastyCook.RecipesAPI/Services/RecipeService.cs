@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using MassTransit;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 
@@ -9,10 +7,12 @@ namespace TastyCook.RecipesAPI.Services
     public class RecipeService
     {
         private readonly RecipesContext _db;
+        private readonly FileService _fileService;
 
-        public RecipeService(RecipesContext db)
+        public RecipeService(RecipesContext db, FileService filesService)
         {
             _db = db;
+            _fileService = filesService;
         }
 
         public int GetAllCount(string searchValue, IEnumerable<string> filters, Localization localization)
@@ -141,22 +141,11 @@ namespace TastyCook.RecipesAPI.Services
             //var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
             var recipeDb = _db.Recipes.FirstOrDefault(r => r.Id == id);
 
-            using (var memoryStream = new MemoryStream())
-            {
-                await data.CopyToAsync(memoryStream);
-
-                if (memoryStream.Length < 209715200)
-                {
-                    var file = memoryStream.ToArray();
-
-                    recipeDb.Image = file;
-                }
-                else
-                {
-                    throw new Exception("File is too big");
-                }
-            }
-
+            var fileName = $"recipe{id}Image{Path.GetExtension(data.FileName)}";
+            var fileUrl = "https://tastycookfilestorage.blob.core.windows.net/recipeimages/" + fileName;
+            await _fileService.UploadFile(data, fileName);
+            
+            recipeDb.ImageUrl = fileUrl;
             await _db.SaveChangesAsync();
         }
 

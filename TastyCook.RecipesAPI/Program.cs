@@ -36,6 +36,7 @@ builder.Services.AddScoped<CategoriesService>();
 builder.Services.AddScoped<RecipeService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CommentsService>();
+builder.Services.AddScoped<FileService>();
 // To apply migration automatically.
 //builder.Services.BuildServiceProvider().GetService<RecipesContext>().Database.Migrate();
 
