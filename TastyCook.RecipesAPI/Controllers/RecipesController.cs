@@ -296,7 +296,7 @@ namespace TastyCook.RecipesAPI.Controllers
                 var recipe = _recipeService.GetById(id, Localization.None);
                 
                 _logger.LogInformation($"{DateTime.Now} | End getting recipe image by id {id}");
-                return File(recipe.Image, "image/png");
+                return File(recipe.ImageUrl, "image/png");
             }
             catch (Exception exc)
             {
@@ -337,7 +337,8 @@ namespace TastyCook.RecipesAPI.Controllers
                 Likes = r.Likes,
                 UserId = r.UserId,
                 IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
-                Localization = r.Localization
+                Localization = r.Localization,
+                ImageUrl = r.ImageUrl
             });
 
             return responseRecipes;
@@ -356,7 +357,8 @@ namespace TastyCook.RecipesAPI.Controllers
                 Likes = recipe.Likes,
                 UserId = recipe.UserId,
                 IsUserLiked = recipe.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
-                Localization = recipe.Localization
+                Localization = recipe.Localization,
+                ImageUrl = recipe.ImageUrl
             };
 
             return responseRecipe;

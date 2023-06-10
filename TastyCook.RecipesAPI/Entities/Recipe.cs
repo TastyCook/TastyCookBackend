@@ -9,7 +9,7 @@ namespace TastyCook.RecipesAPI.Entities
         public string Description { get; set; }
         //public IEnumerable<Products> Products { get; set; }
         public int Likes { get; set; }
-        public byte[] Image { get; set; }
+        public string ImageUrl { get; set; }
         public Localization Localization { get; set; }
 
         [MaxLength(225)]
@@ -34,6 +34,7 @@ namespace TastyCook.RecipesAPI.Entities
             Categories = recipe.Categories;
             RecipeUsers = recipe.RecipeUsers;
             Comments = recipe.Comments;
+            ImageUrl = recipe.ImageUrl;
         }
     }
 }
