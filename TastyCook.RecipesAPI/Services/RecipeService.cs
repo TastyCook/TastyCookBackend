@@ -100,7 +100,7 @@ namespace TastyCook.RecipesAPI.Services
             return recipe ?? throw new Exception("There is no such recipe");
         }
 
-        public void Add(RecipeModel recipe, string userEmail)
+        public Recipe Add(RecipeModel recipe, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
             var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name)).Distinct()
@@ -117,6 +117,8 @@ namespace TastyCook.RecipesAPI.Services
 
             _db.Recipes.Add(dbRecipe);
             _db.SaveChanges();
+
+            return dbRecipe;
         }
 
         public void Update(RecipeModel recipe, string userEmail)

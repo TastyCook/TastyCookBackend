@@ -11,6 +11,6 @@
         public bool? IsUserLiked { get; set; }
         public string? UserId { get; set; }
         public IEnumerable<string> Categories { get; set; }
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

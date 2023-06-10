@@ -214,10 +214,11 @@ namespace TastyCook.RecipesAPI.Controllers
             {
                 _logger.LogInformation($"{DateTime.Now} | Start creating new recipe, title {recipe.Title}");
                 string userEmail = User.Identity.Name;
-                _recipeService.Add(recipe, userEmail);
+                var createdRecipe = _recipeService.Add(recipe, userEmail);
+                var recipeResult = MapRecipeToResponse(createdRecipe, userEmail);
                 _logger.LogInformation($"{DateTime.Now} | End creating new recipe, title {recipe.Title}");
 
-                return Ok();
+                return Ok(recipeResult);
             }
             catch (Exception exc)
             {
