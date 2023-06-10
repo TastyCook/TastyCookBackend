@@ -1,4 +1,4 @@
-name: UsersAPI build and push
+name: ProductsAPI build and push
 
 on:
   push:
