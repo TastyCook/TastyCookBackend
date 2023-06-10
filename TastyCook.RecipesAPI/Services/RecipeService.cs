@@ -75,10 +75,13 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, "")
+            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, "");
+
+            var tt = recipesQuery.ToList().Where(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
+            var t = recipesQuery
                 .Where(r => r.RecipeUsers.Any(x => x.UserId == user.Id && x.IsUserLiked));
 
-            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset);
+            var recipes = GetRecipesByPagination(t, request.Limit, request.Offset);
 
             return recipes;
         }
@@ -220,7 +223,10 @@ namespace TastyCook.RecipesAPI.Services
             if (localization != Localization.None)
             {
                 recipes = recipes.Where(r => r.Localization == localization)
-                    .Select(r => new Recipe(r) { Categories = r.Categories.Where(c => c.Localization == localization)});
+                    .Select(r => new Recipe(r)
+                        {
+                            Categories = r.Categories.Where(c => c.Localization == localization).ToList()
+                        }).ToList().AsQueryable();
             }
 
             if (!string.IsNullOrEmpty(email))
