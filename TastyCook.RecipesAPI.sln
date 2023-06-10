@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.RecipesAPI", "Tas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.Contracts", "TastyCook.Contracts\TastyCook.Contracts.csproj", "{11324202-5F55-4CF7-AC0C-A0950CB58C69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyCook.ProductsAPI", "TastyCook.ProductsAPI\TastyCook.ProductsAPI.csproj", "{E2C26C19-58EC-40C6-92CE-1D9076786129}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.ProductsAPI", "TastyCook.ProductsAPI\TastyCook.ProductsAPI.csproj", "{E2C26C19-58EC-40C6-92CE-1D9076786129}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyCook.RecipesAPI.Tests", "TastyCook.RecipesAPI.Tests\TastyCook.RecipesAPI.Tests.csproj", "{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{E2C26C19-58EC-40C6-92CE-1D9076786129}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2C26C19-58EC-40C6-92CE-1D9076786129}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2C26C19-58EC-40C6-92CE-1D9076786129}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
