@@ -82,7 +82,7 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, "");
+            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, email);
 
             var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r => new Recipe(r)
             {
@@ -151,10 +151,12 @@ namespace TastyCook.RecipesAPI.Services
 
             var fileName = $"recipe{id}Image{Path.GetExtension(data.FileName)}";
             var fileUrl = "https://tastycookfilestorage.blob.core.windows.net/recipeimages/" + fileName;
-            await _fileService.UploadFile(data, fileName);
-            
-            recipeDb.ImageUrl = fileUrl;
-            await _db.SaveChangesAsync();
+            var fileUploadResult = await _fileService.UploadFile(data, fileName);
+            if (fileUploadResult)
+            {
+                recipeDb.ImageUrl = fileUrl;
+                await _db.SaveChangesAsync();
+            }
         }
 
         public void DeleteById(int id, string userEmail)

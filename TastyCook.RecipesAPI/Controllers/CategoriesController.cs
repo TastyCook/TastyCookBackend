@@ -24,12 +24,12 @@ public class CategoriesController : ControllerBase
     [HttpGet]
     [Route("")]
     [AllowAnonymous]
-    public IActionResult GetAll()
+    public IActionResult GetAll(Localization localization)
     {
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start getting all categories");
-            var categories = _categoriesService.GetAll();
+            var categories = _categoriesService.GetAll(localization);
             _logger.LogInformation($"{DateTime.Now} | End getting all recipes");
 
             return Ok(categories);

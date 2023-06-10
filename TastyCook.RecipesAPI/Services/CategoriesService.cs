@@ -11,9 +11,14 @@ public class CategoriesService
         _db = db;
     }
 
-    public IEnumerable<Category> GetAll()
+    public IEnumerable<Category> GetAll(Localization localization)
     {
-        return _db.Categories.ToList();
+        if (localization == Localization.None)
+        {
+            return _db.Categories.ToList();
+        }
+
+        return _db.Categories.Where(c => c.Localization == localization).ToList();
     }
 
     public Category? GetById(int id)
