@@ -106,19 +106,6 @@ public class CommentsController : ControllerBase
         }
     }
 
-    public CommentModel MapCommentToModel(Comment comment)
-    {
-        var commentModel = new CommentModel()
-        {
-            Id = comment.Id,
-            RecipeId = comment.RecipeId,
-            CommentValue = comment.CommentValue,
-            Username = comment.User?.UserName
-        };
-
-        return commentModel;
-    }
-
     public IEnumerable<CommentModel> MapCommentsToModel(IEnumerable<Comment> comments)
     {
         var commentModels = comments.Select(c => new CommentModel()
