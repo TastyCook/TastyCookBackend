@@ -100,7 +100,7 @@ namespace TastyCook.ProductsAPI.Services
             return _db.Products.FirstOrDefault(r => r.Id == id);
         }
 
-        public void AddNewProduct(Product product)
+        public Product AddNewProduct(Product product)
         {
             if (string.IsNullOrEmpty(product.Name))
             {
@@ -109,9 +109,11 @@ namespace TastyCook.ProductsAPI.Services
 
             _db.Products.Add(product);
             _db.SaveChanges();
+
+            return product;
         }
 
-        public void AddUserProduct(int productId, string amount, string type, string userEmail)
+        public ProductUser AddUserProduct(int productId, string amount, string type, string userEmail)
         {
 
             var product = GetById(productId);
@@ -126,18 +128,21 @@ namespace TastyCook.ProductsAPI.Services
                 throw new Exception("The user already has this product");
             }
 
-            _db.ProductUsers.Add(new ProductUser()
+            var productUser = new ProductUser()
             {
                 ProductId = productId,
                 UserId = user.Id,
                 Amount = amount,
                 Type = type
-            });
-
+            };
+            
+            _db.ProductUsers.Add(productUser);
             _db.SaveChanges();
+
+            return productUser;
         }
 
-        public void UpdateUserProduct(int productId, string amount, string type, string userEmail)
+        public ProductUser UpdateUserProduct(int productId, string amount, string type, string userEmail)
         {
             var user = _db.Users.Include(u => u.ProductUsers).FirstOrDefault(u => u.Email == userEmail);
             var userProduct = _db.ProductUsers.FirstOrDefault(pu => pu.UserId == user.Id && pu.ProductId == productId);
@@ -149,15 +154,19 @@ namespace TastyCook.ProductsAPI.Services
             userProduct.Amount = amount;
             userProduct.Type = type;
             _db.SaveChanges();
+
+            return userProduct;
         }
 
-        public void Update(ProductModel model)
+        public Product Update(ProductModel model)
         {
             var product = _db.Products.FirstOrDefault(p => p.Id == model.Id);
             product.Name = model.Name;
             product.Calories = model.Calories;
             product.Localization = model.Localization;
             _db.SaveChanges();
+
+            return product;
         }
 
 
@@ -179,15 +188,14 @@ namespace TastyCook.ProductsAPI.Services
             return products.ToList();
         }
 
-        //public void DeleteById(int id, string userEmail)
-        //{
-        //    var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-        //    var ProductToDelete = _db.Products.FirstOrDefault(r => r.Id == id && r.UserId == user.Id);
-        //    if (ProductToDelete != null)
-        //    {
-        //        _db.Products.Remove(ProductToDelete);
-        //        _db.SaveChanges();
-        //    }
-        //}
+        public void DeleteById(int id)
+        {
+            var productToDelete = _db.Products.FirstOrDefault(r => r.Id == id);
+            if (productToDelete != null)
+            {
+                _db.Products.Remove(productToDelete);
+                _db.SaveChanges();
+            }
+        }
     }
 }

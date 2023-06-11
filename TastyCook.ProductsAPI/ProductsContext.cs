@@ -15,21 +15,21 @@ namespace TastyCook.ProductsAPI
         {
             //Database.EnsureCreated();
         }
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.Entity<ProductUser>()
-        //        .HasKey(sc => new { sc.ProductId, sc.UserId });
 
-        //    modelBuilder.Entity<ProductUser>()
-        //        .HasOne<Product>(sc => sc.Product)
-        //        .WithMany(s => s.ProductUsers)
-        //        .HasForeignKey(sc => sc.ProductId);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<RecipeProduct>()
+                .HasKey(sc => new { sc.ProductId, sc.RecipeId });
 
+            modelBuilder.Entity<RecipeProduct>()
+                .HasOne<Product>(sc => sc.Product)
+                .WithMany(s => s.RecipeProducts)
+                .HasForeignKey(sc => sc.ProductId);
 
-        //    modelBuilder.Entity<ProductUser>()
-        //        .HasOne<User>(sc => sc.User)
-        //        .WithMany(s => s.ProductUsers)
-        //        .HasForeignKey(sc => sc.UserId);
-        //}
+            modelBuilder.Entity<RecipeProduct>()
+                .HasOne<Recipe>(sc => sc.Recipe)
+                .WithMany(s => s.RecipeProducts)
+                .HasForeignKey(sc => sc.RecipeId);
+        }
     }
 }
