@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TastyCook.ProductsAPI.Entities;
 using TastyCook.ProductsAPI.Models;
 using TastyCook.ProductsAPI.Services;
+using static MassTransit.ValidationResultExtensions;
+using static TastyCook.Contracts.Contracts;
 
 namespace TastyCook.ProductsAPI.Controllers;
 
@@ -14,11 +17,14 @@ public class ProductsController : ControllerBase
     private readonly ILogger<ProductsController> _logger;
     private readonly ProductService _productService;
     private readonly UserService _userService;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public ProductsController(ProductService productService,
+        IPublishEndpoint publishEndpoint,
         ILogger<ProductsController> logger,
         UserService userService)
     {
+        _publishEndpoint = publishEndpoint;
         _productService = productService;
         _logger = logger;
         _userService = userService;
@@ -105,7 +111,14 @@ public class ProductsController : ControllerBase
             var userRole = _userService.GetByEmail(User.Identity.Name).Role;
             if (userRole == "User") return Forbid();
 
-            _productService.AddNewProduct(new Product() { Name = model.Name, Calories = model.Calories, Localization = model.Localization });
+            var result = _productService.AddNewProduct(new Product()
+            {
+                Name = model.Name, Calories = model.Calories, Localization = model.Localization
+            });
+            var test = new ProductItemCreated(result.Id, result.Name,
+                result.Calories, (Contracts.Localization)result.Localization);
+            _publishEndpoint.Publish(test);
+
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();
@@ -130,7 +143,8 @@ public class ProductsController : ControllerBase
             if (userRole == "User") return Forbid();
 
             model.Id = id;
-            _productService.Update(model);
+            var result = _productService.Update(model);
+            _publishEndpoint.Publish(new ProductItemUpdated(result.Id, result.Name, result.Calories, (Contracts.Localization)result.Localization));
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();
@@ -149,9 +163,9 @@ public class ProductsController : ControllerBase
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new product to user");
-            _productService.AddUserProduct(model.ProductId, model.Amount, model.Type, User.Identity.Name);
+            var result = _productService.AddUserProduct(model.ProductId, model.Amount, model.Type, User.Identity.Name);
+            _publishEndpoint.Publish(new ProductUserItemCreated(result.UserId, result.ProductId, result.Amount, result.Type));
             _logger.LogInformation($"{DateTime.Now} | End adding new category to user");
-
             return Ok();
         }
         catch (Exception ex)
@@ -169,7 +183,28 @@ public class ProductsController : ControllerBase
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new category");
             model.ProductId = id;
-            _productService.UpdateUserProduct(model.ProductId, model.Amount, model.Type, User.Identity.Name);
+            var result = _productService.UpdateUserProduct(model.ProductId, model.Amount, model.Type, User.Identity.Name);
+            _publishEndpoint.Publish(new ProductUserItemUpdated(result.UserId, result.ProductId, result.Amount, result.Type));
+            _logger.LogInformation($"{DateTime.Now} | End adding new category");
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpDelete]
+    [Route("admin/{id}")]
+    public IActionResult DeleteProduct(int id)
+    {
+        try
+        {
+            _logger.LogInformation($"{DateTime.Now} | Start adding new category");
+            _productService.DeleteById(id);
+            _publishEndpoint.Publish(new ProductItemDeleted(id));
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();

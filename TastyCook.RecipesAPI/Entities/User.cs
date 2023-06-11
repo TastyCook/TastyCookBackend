@@ -13,4 +13,5 @@ public class User
     public IEnumerable<Recipe> Recipes { get; set; }
     public IEnumerable<RecipeUser> RecipeUsers { get; set; }
     public IEnumerable<Comment> Comments { get; set; }
+    public IEnumerable<ProductUser> ProductUsers { get; set; }
 }

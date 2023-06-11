@@ -8,14 +8,17 @@ using TastyCook.ProductsAPI;
 using TastyCook.ProductsAPI.Settings;
 using TastyCook.ProductsAPI.Services;
 
-var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 #if DEBUG
 Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Debug");
+Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Debug");
 #else
     Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
+    Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Production");
 #endif
+
+var builder = WebApplication.CreateBuilder(args);
+
 
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
 {
@@ -54,7 +57,7 @@ builder.Services.AddMassTransit(x =>
             c.Password(rabbitMqSettings.Password);
         });
         configurator.Host(rabbitMqSettings.Host);
-        configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("Recipes", false));
+        configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("Products", false));
     });
 });
 builder.Services.AddMassTransitHostedService();

@@ -10,6 +10,9 @@ namespace TastyCook.RecipesAPI
         public virtual DbSet<RecipeUser> RecipeUsers { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<Comment> Comments { get; set; }
+        public virtual DbSet<Product> Products { get; set; }
+        public virtual DbSet<RecipeProduct> RecipeProducts { get; set; }
+        public virtual DbSet<ProductUser> ProductUsers { get; set; }
 
         public RecipesContext(DbContextOptions<RecipesContext> options) : base(options)
         {
@@ -35,6 +38,34 @@ namespace TastyCook.RecipesAPI
                 .HasOne<User>(sc => sc.User)
                 .WithMany(s => s.RecipeUsers)
                 .HasForeignKey(sc => sc.UserId)
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+
+            modelBuilder.Entity<ProductUser>().HasKey(sc => new { sc.UserId, sc.ProductId });
+
+            modelBuilder.Entity<ProductUser>()
+                .HasOne<Product>(sc => sc.Product)
+                .WithMany(s => s.ProductUsers)
+                .HasForeignKey(sc => sc.ProductId);
+
+            modelBuilder.Entity<ProductUser>()
+                .HasOne<User>(sc => sc.User)
+                .WithMany(s => s.ProductUsers)
+                .HasForeignKey(sc => sc.UserId)
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+
+            modelBuilder.Entity<RecipeProduct>().HasKey(sc => new { sc.RecipeId, sc.ProductId });
+
+            modelBuilder.Entity<RecipeProduct>()
+                .HasOne<Recipe>(sc => sc.Recipe)
+                .WithMany(s => s.RecipeProducts)
+                .HasForeignKey(sc => sc.RecipeId);
+
+            modelBuilder.Entity<RecipeProduct>()
+                .HasOne<Product>(sc => sc.Product)
+                .WithMany(s => s.RecipeProducts)
+                .HasForeignKey(sc => sc.ProductId)
                 .OnDelete(DeleteBehavior.ClientCascade);
 
 

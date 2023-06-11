@@ -47,7 +47,7 @@ namespace TastyCook.RecipesAPI.Services
 
         public IEnumerable<Recipe> GetAll(GetAllRecipesRequest request)
         {
-            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization);
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, "");
             var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset)
                 .Select(r => new Recipe(r)
                 {
@@ -65,7 +65,7 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, email);
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, "", email);
             var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r => new Recipe(r)
             {
                 Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
@@ -82,14 +82,51 @@ namespace TastyCook.RecipesAPI.Services
                 return Enumerable.Empty<Recipe>();
             }
 
-            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, email);
+            var recipesQuery = GetRecipesByFiltersQuery("", Enumerable.Empty<string>(), request.Localization, user.Id);
 
-            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r => new Recipe(r)
+            if (request.Localization != Localization.None)
             {
-                Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
-            }).ToList();
+               return GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).Select(r =>
+                    new Recipe(r)
+                    {
+                        Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
+                    }).ToList();
+            }
 
-            return recipes;
+            return GetRecipesByPagination(recipesQuery, request.Limit, request.Offset).ToList();
+        }
+
+        public List<Recipe> GetRecipesByProducts(GetRecipesByProductListRequest request)
+        {
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, "").ToList();
+            List<Recipe> recipesList = new List<Recipe>();
+            for (var i = 0; i < recipesQuery.Count; i++)
+            {
+                var recipe = recipesQuery[i];
+                var checkAllProducts = request.Products.All(pn => recipe.RecipeProducts.Any(rp => rp.Product.Name == pn));
+                if (checkAllProducts)
+                {
+                    recipesList.Add(recipe);
+                }
+            }
+
+            var recipesListQuery = recipesList.AsQueryable()
+                .Include(r => r.Categories)
+                .Include(r => r.RecipeProducts)
+                .ThenInclude(r => r.Product);
+
+            if (request.Localization != Localization.None)
+            {
+                return GetRecipesByPagination(recipesListQuery, request.Limit, request.Offset)
+                    .Select(r => new Recipe(r)
+                    {
+                        Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList(),
+                        RecipeProducts = r.RecipeProducts.Where(rp => rp.Product.Localization == request.Localization).ToList()
+                    }).ToList();
+            }
+            
+
+            return GetRecipesByPagination(recipesListQuery, request.Limit, request.Offset).ToList();
         }
 
         public Recipe GetById(int id, Localization localization)
@@ -109,8 +146,7 @@ namespace TastyCook.RecipesAPI.Services
         public Recipe Add(RecipeModel recipe, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name)).Distinct()
-                .ToList();
+            var categories = _db.Categories.Where(c => recipe.Categories.Any(rc => rc == c.Name)).Distinct().ToList();
 
             var dbRecipe = new Recipe
             {
@@ -118,13 +154,25 @@ namespace TastyCook.RecipesAPI.Services
                 Description = recipe.Description,
                 Categories = categories,
                 Localization = recipe.Localization,
-                UserId = user.Id
+                UserId = user.Id,
             };
 
             _db.Recipes.Add(dbRecipe);
             _db.SaveChanges();
 
-            return dbRecipe;
+            var products = _db.Products.Where(p => recipe.Products.Any(rp => rp == p.Name)).Distinct().ToList();
+            var recipeProducts = products.Select(p => new RecipeProduct()
+                { ProductId = p.Id, RecipeId = dbRecipe.Id, Amount = "1 item" });
+
+            _db.RecipeProducts.AddRange(recipeProducts);
+            _db.SaveChanges();
+
+            var createdRecipe = _db.Recipes.Include(r => r.Categories)
+                .Include(r => r.RecipeProducts)
+                .ThenInclude(r => r.Product)
+                .FirstOrDefault(r => r.Id == dbRecipe.Id);
+
+            return createdRecipe;
         }
 
         public void Update(RecipeModel recipe, string userEmail)
@@ -141,6 +189,16 @@ namespace TastyCook.RecipesAPI.Services
                 .ToList();
 
             recipeDb.Categories = categories;
+            _db.SaveChanges();
+
+            var recipeProductsToDelete = _db.RecipeProducts.Where(rp => rp.RecipeId == recipe.Id);
+            _db.RecipeProducts.RemoveRange(recipeProductsToDelete);
+
+            var products = _db.Products.Where(p => recipe.Products.Any(rp => rp == p.Name)).Distinct().ToList();
+            var recipeProducts = products.Select(p => new RecipeProduct()
+                { ProductId = p.Id, RecipeId = recipe.Id, Amount = "1 item" });
+
+            _db.RecipeProducts.AddRange(recipeProducts);
             _db.SaveChanges();
         }
 
@@ -176,9 +234,13 @@ namespace TastyCook.RecipesAPI.Services
             {
                 throw new Exception("You don't have access to delete this recipe");
             }
+
             var recipesUsers = _db.RecipeUsers.Where(ru => ru.RecipeId == id).ToList();
             _db.RecipeUsers.RemoveRange(recipesUsers);
+            var recipesProducts = _db.RecipeProducts.Where(rp => rp.RecipeId == id).ToList();
+            _db.RecipeProducts.RemoveRange(recipesProducts);
             _db.SaveChanges();
+
 
             if (recipeToDelete != null)
             {
@@ -230,15 +292,22 @@ namespace TastyCook.RecipesAPI.Services
         }
 
         private IQueryable<Recipe> GetRecipesByFiltersQuery(string searchValue,
-            IEnumerable<string> filters, Localization localization, string email = "")
+            IEnumerable<string> filters, Localization localization, string likedUserId, string email = "")
         {
             IQueryable<Recipe> recipes = _db.Recipes
                 .Include(r => r.Categories)
-                .Include(r => r.RecipeUsers);
+                .Include(r => r.RecipeUsers)
+                .Include(r => r.RecipeProducts)
+                .ThenInclude(rp => rp.Product);
 
             if (localization != Localization.None)
             {
                 recipes = recipes.Where(r => r.Localization == localization);
+            }
+
+            if (!string.IsNullOrWhiteSpace(likedUserId))
+            {
+                recipes = recipes.Where(r => r.RecipeUsers.Any(ru => ru.UserId == likedUserId && ru.IsUserLiked));
             }
 
             if (!string.IsNullOrEmpty(email))

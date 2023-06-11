@@ -1,12 +1,9 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.IO.Compression;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
 using TastyCook.RecipesAPI.Services;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TastyCook.RecipesAPI.Controllers
 {
@@ -18,16 +15,16 @@ namespace TastyCook.RecipesAPI.Controllers
         private readonly ILogger<RecipesController> _logger;
         private readonly RecipeService _recipeService;
         private readonly UserService _userService;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ProductService _productService;
 
         public RecipesController(RecipeService recipeService,
-            IPublishEndpoint publishEndpoint,
             ILogger<RecipesController> logger,
-            UserService userService)
+            UserService userService,
+            ProductService productService)
         {
+            _productService = productService;
             _recipeService = recipeService;
             _userService = userService;
-            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -66,15 +63,23 @@ namespace TastyCook.RecipesAPI.Controllers
             }
         }
 
-        // TODO: TBD recipes for user recommendations
-        //[HttpGet]
-        //[Route("GetAllByUser")]
-        //public IEnumerable<Recipe> GetAllByUser()
-        //{
-        //    string userId = User.Identity.Name;
+        [HttpGet]
+        [Route("recommendations")]
+        public IActionResult GetRecipesByProductList([FromQuery] GetRecipesByProductListRequest request)
+        {
+            try
+            {
+                var recipes = _recipeService.GetRecipesByProducts(request);
+                var recipeResult = MapRecipesToResponse(recipes, "");
 
-        //    return _recipeService.GetAllByUser();
-        //}
+                return Ok(recipeResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500, ex.Message);
+            }
+        }
 
         [HttpGet]
         [Route("by-user")]
@@ -339,7 +344,8 @@ namespace TastyCook.RecipesAPI.Controllers
                 UserId = r.UserId,
                 IsUserLiked = r.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
                 Localization = r.Localization,
-                ImageUrl = r.ImageUrl
+                ImageUrl = r.ImageUrl,
+                Products = r.RecipeProducts?.Select(rp => rp.Product?.Name).ToList()
             });
 
             return responseRecipes;
@@ -359,7 +365,8 @@ namespace TastyCook.RecipesAPI.Controllers
                 UserId = recipe.UserId,
                 IsUserLiked = recipe.RecipeUsers?.FirstOrDefault(x => x.UserId == user?.Id)?.IsUserLiked ?? false,
                 Localization = recipe.Localization,
-                ImageUrl = recipe.ImageUrl
+                ImageUrl = recipe.ImageUrl,
+                Products = recipe.RecipeProducts?.Select(rp => rp.Product?.Name).ToList()
             };
 
             return responseRecipe;
