@@ -9,6 +9,9 @@ on:
       service:
         required: true
         type: string
+      dotnet-version:
+        required: true
+        type: string
     secrets:
       REGISTRY_USERNAME:
         required: true
@@ -18,7 +21,27 @@ on:
         required: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: ${{ inputs.service }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Run tests
+        run: |
+          cd ${{ matrix.service }}
+          make test
+
   build-and-push:
+    needs: [ test ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
