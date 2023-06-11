@@ -72,8 +72,21 @@ namespace TastyCook.RecipesAPI.Controllers
             {
                 var recipes = _recipeService.GetRecipesByProducts(request);
                 var recipeResult = MapRecipesToResponse(recipes, "");
+                var totalRecipes = _recipeService.GetRecipesByProductsCount(request);
+                var totalPagesWithCurrentLimit = int.MaxValue;
+                if (request.Limit.HasValue && request.Limit > 0)
+                {
+                    var pages = GetFlooredInt(totalRecipes, request.Limit.Value);
+                    totalPagesWithCurrentLimit = pages < 1 ? 1 : pages;
+                }
 
-                return Ok(recipeResult);
+                var recipesResponse = new GetRecipesResponse()
+                {
+                    Recipes = recipeResult,
+                    TotalPagesWithCurrentLimit = totalPagesWithCurrentLimit
+                };
+
+                return Ok(recipesResponse);
             }
             catch (Exception ex)
             {

@@ -129,6 +129,28 @@ namespace TastyCook.RecipesAPI.Services
             return GetRecipesByPagination(recipesListQuery, request.Limit, request.Offset).ToList();
         }
 
+        public int GetRecipesByProductsCount(GetRecipesByProductListRequest request)
+        {
+            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, "").ToList();
+            List<Recipe> recipesList = new List<Recipe>();
+            for (var i = 0; i < recipesQuery.Count; i++)
+            {
+                var recipe = recipesQuery[i];
+                var checkAllProducts = request.Products.All(pn => recipe.RecipeProducts.Any(rp => rp.Product.Name == pn));
+                if (checkAllProducts)
+                {
+                    recipesList.Add(recipe);
+                }
+            }
+
+            var recipesListQuery = recipesList.AsQueryable()
+                .Include(r => r.Categories)
+                .Include(r => r.RecipeProducts)
+                .ThenInclude(r => r.Product);
+
+            return recipesList.Count;
+        }
+
         public Recipe GetById(int id, Localization localization)
         {
             var recipe = _db.Recipes.Include(r => r.Categories)
