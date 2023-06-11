@@ -70,7 +70,8 @@ namespace TastyCook.UsersAPI.Controllers
                         var userFromDb = await _userManager.FindByEmailAsync(payload.Email);
 
                         _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                        await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name));
+                        var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                        await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name, userRole));
                         _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                     }
                 }
@@ -82,7 +83,7 @@ namespace TastyCook.UsersAPI.Controllers
                 var token = await CreateTokenAsync(new UserModel() { Email = payload.Email });
                 _logger.LogInformation($"{DateTime.Now} | Successful authentication with Google account {data.IdToken}");
 
-                return Ok(new { AuthToken = token });
+                return Ok(new { AuthToken = token, IsExternalLogin = true });
             }
             catch (Exception ex)
             {
@@ -110,7 +111,7 @@ namespace TastyCook.UsersAPI.Controllers
                     var userFromDb = await _userManager.FindByEmailAsync(user.Email);
 
                     _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username));
+                    await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, user.Email, user.Username, "User"));
                     _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                 }
 
@@ -138,7 +139,7 @@ namespace TastyCook.UsersAPI.Controllers
                 var token = await CreateTokenAsync(model);
                 _logger.LogInformation($"{DateTime.Now} | End logging in, email {model.Email}");
 
-                return result ? Unauthorized() : Ok(new { Token = token });
+                return result ? Unauthorized() : Ok(new { Token = token, IsExternalLogin = false });
             }
             catch (Exception ex)
             {
@@ -180,7 +181,8 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, email {User.Identity.Name}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName));
+                    var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName, userRole));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, email {User.Identity.Name}");
 
                     return Ok();
@@ -224,7 +226,8 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, oldEmail {userEmail}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName));
+                    var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, userRole));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, oldEmail {userEmail}");
                     var newToken = await CreateTokenAsync(new UserModel() { Email = changeEmailModel.NewEmail });
 
@@ -340,7 +343,8 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, id {userId}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName));
+                    var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, user.Email, user.UserName, userRole));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, id {userId}");
 
                     return Ok();
@@ -378,7 +382,8 @@ namespace TastyCook.UsersAPI.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"{DateTime.Now} | Start sending updated user to message broker, id {userId}");
-                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName));
+                    var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                    await _publishEndpoint.Publish(new UserItemUpdated(user.Id, changeEmailModel.NewEmail, user.UserName, userRole));
                     _logger.LogInformation($"{DateTime.Now} | End sending updated user to message broker, id {userId}");
 
                     return Ok();

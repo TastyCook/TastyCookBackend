@@ -16,6 +16,11 @@ public class UserService
         return _db.Users.ToList();
     }
 
+    public User? GetByEmail(string email)
+    {
+        return _db.Users.FirstOrDefault(r => r.Email == email);
+    }
+
     public User? GetById(string id)
     {
         return _db.Users.FirstOrDefault(r => r.Id == id);

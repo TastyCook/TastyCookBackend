@@ -13,12 +13,15 @@ public class ProductsController : ControllerBase
 {
     private readonly ILogger<ProductsController> _logger;
     private readonly ProductService _productService;
+    private readonly UserService _userService;
 
     public ProductsController(ProductService productService,
-        ILogger<ProductsController> logger)
+        ILogger<ProductsController> logger,
+        UserService userService)
     {
         _productService = productService;
         _logger = logger;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -98,6 +101,10 @@ public class ProductsController : ControllerBase
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new product");
+
+            var userRole = _userService.GetByEmail(User.Identity.Name).Role;
+            if (userRole == "User") return Forbid();
+
             _productService.AddNewProduct(new Product() { Name = model.Name, Calories = model.Calories});
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
@@ -118,6 +125,10 @@ public class ProductsController : ControllerBase
         try
         {
             _logger.LogInformation($"{DateTime.Now} | Start adding new category");
+
+            var userRole = _userService.GetByEmail(User.Identity.Name).Role;
+            if (userRole == "User") return Forbid();
+
             model.Id = id;
             _productService.Update(model);
             _logger.LogInformation($"{DateTime.Now} | End adding new category");

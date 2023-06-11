@@ -162,8 +162,20 @@ namespace TastyCook.RecipesAPI.Services
         public void DeleteById(int id, string userEmail)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == userEmail);
-            var recipeToDelete = _db.Recipes.FirstOrDefault(r => r.Id == id && r.UserId == user.Id);
+            Recipe recipeToDelete;
+            if (user.Role == "Admin")
+            {
+                recipeToDelete = _db.Recipes.FirstOrDefault(r => r.Id == id);
+            }
+            else
+            {
+                recipeToDelete = _db.Recipes.FirstOrDefault(r => r.Id == id && r.UserId == user.Id);
+            }
 
+            if (recipeToDelete == null)
+            {
+                throw new Exception("You don't have access to delete this recipe");
+            }
             var recipesUsers = _db.RecipeUsers.Where(ru => ru.RecipeId == id).ToList();
             _db.RecipeUsers.RemoveRange(recipesUsers);
             _db.SaveChanges();
