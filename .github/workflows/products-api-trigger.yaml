@@ -3,7 +3,7 @@ name: ProductsAPI build and push
 on:
   push:
     branches:
-      - main
+      - add-test-to-workflow
     paths:
       - 'TastyCook.ProductsAPI/**'
 
