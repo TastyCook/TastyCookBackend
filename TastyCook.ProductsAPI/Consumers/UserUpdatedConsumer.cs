@@ -24,11 +24,11 @@ public class UserUpdatedConsumer : IConsumer<UserItemUpdated>
         var item = _userService.GetById(message.Id);
         if (item is null)
         {
-            _userService.Add(new User { Id = message.Id, Email = message.Email, UserName = message.Username });
+            _userService.Add(new User { Id = message.Id, Email = message.Email, UserName = message.Username, Role = message.Role });
             _logger.LogInformation($"{DateTime.Now} | User added during update after consume: {context.Message}");
         }
 
-        _userService.Update(new User { Id = message.Id, Email = message.Email, UserName = message.Username});
+        _userService.Update(new User { Id = message.Id, Email = message.Email, UserName = message.Username, Role = message.Role });
         _logger.LogInformation($"{DateTime.Now} | User updated after consume: {context.Message}");
     }
 }

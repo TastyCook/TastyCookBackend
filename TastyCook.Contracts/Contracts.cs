@@ -2,8 +2,8 @@
 {
     public class Contracts
     {
-        public record UserItemCreated(string Id, string Email, string Username);
-        public record UserItemUpdated(string Id, string Email, string Username);
+        public record UserItemCreated(string Id, string Email, string Username, string Role);
+        public record UserItemUpdated(string Id, string Email, string Username, string Role);
         public record UserItemDeleted(string Id);
 
 

@@ -13,7 +13,7 @@ namespace TastyCook.ProductsAPI
 
         public ProductsContext(DbContextOptions<ProductsContext> options) : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
