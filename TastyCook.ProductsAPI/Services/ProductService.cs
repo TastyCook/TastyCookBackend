@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
 using TastyCook.ProductsAPI.Entities;
 using TastyCook.ProductsAPI.Models;
 
@@ -18,23 +16,36 @@ namespace TastyCook.ProductsAPI.Services
         public IEnumerable<Product> GetAll(ProductsRequest request)
         {
             IQueryable<Product> productsQuery = _db.Products;
+
+            if (request.Localization != Localization.None)
+            {
+                productsQuery = productsQuery.Where(r => r.Localization == request.Localization);
+            }
+
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
-                productsQuery = _db.Products.Where(p => p.Name.Contains(request.SearchValue));
+                productsQuery = productsQuery.Where(p => p.Name.Contains(request.SearchValue));
             }
 
             var products = GetByPagination(productsQuery, request.Limit, request.Offset);
             return products;
         }
 
-        public int GetAllCount(string searchValue)
+        public int GetAllCount(string searchValue, Localization localization)
         {
-            if (string.IsNullOrEmpty(searchValue))
+            IQueryable<Product> productsQuery = _db.Products;
+
+            if (localization != Localization.None)
             {
-                return _db.Products.Count();
+                productsQuery = productsQuery.Where(r => r.Localization == localization);
             }
 
-            var productsNumber = _db.Products.Count(p => p.Name.Contains(searchValue));
+            if (string.IsNullOrEmpty(searchValue))
+            {
+                return productsQuery.Count();
+            }
+
+            var productsNumber = productsQuery.Count(p => p.Name.Contains(searchValue));
             return productsNumber;
         }
 
@@ -45,6 +56,11 @@ namespace TastyCook.ProductsAPI.Services
             if (user == null)
             {
                 return Enumerable.Empty<Product>();
+            }
+
+            if (request.Localization != Localization.None)
+            {
+                productsQuery = productsQuery.Where(r => r.Localization == request.Localization);
             }
 
             if (!string.IsNullOrEmpty(request.SearchValue))
@@ -59,11 +75,16 @@ namespace TastyCook.ProductsAPI.Services
         }
 
 
-        public int GetUserProductsCount(string searchValue, string email)
+        public int GetUserProductsCount(string searchValue, string email, Localization localization)
         {
             var user = _db.Users.FirstOrDefault(u => u.Email == email);
             var products = _db.Products.Include(p => p.ProductUsers)
                 .Where(p => p.ProductUsers.Any(pu => pu.UserId == user.Id));
+
+            if (localization != Localization.None)
+            {
+                products = products.Where(r => r.Localization == localization);
+            }
 
             if (string.IsNullOrEmpty(searchValue))
             {
@@ -135,6 +156,7 @@ namespace TastyCook.ProductsAPI.Services
             var product = _db.Products.FirstOrDefault(p => p.Id == model.Id);
             product.Name = model.Name;
             product.Calories = model.Calories;
+            product.Localization = model.Localization;
             _db.SaveChanges();
         }
 

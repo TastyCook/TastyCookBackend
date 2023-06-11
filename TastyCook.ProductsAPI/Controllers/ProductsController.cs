@@ -33,7 +33,7 @@ public class ProductsController : ControllerBase
         {
             _logger.LogInformation($"{DateTime.Now} | Start getting all products");
             var products = _productService.GetAll(request);
-            var totalProducts = _productService.GetAllCount(request.SearchValue);
+            var totalProducts = _productService.GetAllCount(request.SearchValue, request.Localization);
             var totalPagesWithCurrentLimit = int.MaxValue;
 
             if (request.Limit.HasValue && request.Limit > 0)
@@ -67,7 +67,7 @@ public class ProductsController : ControllerBase
         {
             _logger.LogInformation($"{DateTime.Now} | Start getting all products");
             var products = _productService.GetUserProducts(request, User.Identity.Name);
-            var totalProducts = _productService.GetUserProductsCount(request.SearchValue, User.Identity.Name);
+            var totalProducts = _productService.GetUserProductsCount(request.SearchValue, User.Identity.Name, request.Localization);
             var totalPagesWithCurrentLimit = int.MaxValue;
 
             if (request.Limit.HasValue && request.Limit > 0)
@@ -105,7 +105,7 @@ public class ProductsController : ControllerBase
             var userRole = _userService.GetByEmail(User.Identity.Name).Role;
             if (userRole == "User") return Forbid();
 
-            _productService.AddNewProduct(new Product() { Name = model.Name, Calories = model.Calories});
+            _productService.AddNewProduct(new Product() { Name = model.Name, Calories = model.Calories, Localization = model.Localization });
             _logger.LogInformation($"{DateTime.Now} | End adding new category");
 
             return Ok();
@@ -187,7 +187,8 @@ public class ProductsController : ControllerBase
         {
             ProductId = p.Id,
             Calories = p.Calories,
-            Name = p.Name
+            Name = p.Name,
+            Localization = p.Localization,
         });
 
         return response;
@@ -200,7 +201,8 @@ public class ProductsController : ControllerBase
             ProductId = p.Id,
             Calories = p.Calories,
             Amount = p.ProductUsers?.First().Amount,
-            Name = p.Name
+            Name = p.Name,
+            Localization = p.Localization,
         });
 
         return response;
