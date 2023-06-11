@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/build-and-push.yaml
     with:
       service: TastyCook.RecipesAPI
+      dotnet-version: "7.0"
     secrets:
       REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
       REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
