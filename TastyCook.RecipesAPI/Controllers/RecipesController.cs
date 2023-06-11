@@ -65,6 +65,7 @@ namespace TastyCook.RecipesAPI.Controllers
 
         [HttpGet]
         [Route("recommendations")]
+        [AllowAnonymous]
         public IActionResult GetRecipesByProductList([FromQuery] GetRecipesByProductListRequest request)
         {
             try
