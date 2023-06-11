@@ -13,3 +13,11 @@ docker-push:
 docker-start:
 	docker create -p "9002:80" --name "users-api-container" "${IMG}:${TAG}"
 	docker start "users-api-container"
+
+.PHONY: test
+test:
+	if [ -d "../TastyCook.UsersAPI.Tests" ]; then \
+		dotnet test ../TastyCook.UsersAPI.Tests; \
+	else \
+		echo "Test directory not found. Skipping tests."; \
+	fi
