@@ -70,7 +70,7 @@ namespace TastyCook.UsersAPI.Controllers
                         var userFromDb = await _userManager.FindByEmailAsync(payload.Email);
 
                         _logger.LogInformation($"{DateTime.Now} | Start sending new user to message broker, id {userFromDb.Id}");
-                        var userRole = await _userManager.IsInRoleAsync(user, "Admin") ? "Admin" : "User";
+                        var userRole = await _userManager.IsInRoleAsync(userFromDb, "Admin") ? "Admin" : "User";
                         await _publishEndpoint.Publish(new UserItemCreated(userFromDb.Id, payload.Email, payload.Name, userRole));
                         _logger.LogInformation($"{DateTime.Now} | End sending new user to message broker, id {userFromDb.Id}");
                     }
