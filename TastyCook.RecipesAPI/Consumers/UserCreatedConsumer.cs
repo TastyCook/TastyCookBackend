@@ -27,7 +27,7 @@ public class UserCreatedConsumer : IConsumer<UserItemCreated>
             return;
         }
 
-        _userService.Add(new User { Id = message.Id, Email = message.Email/*, Password = message.Password*/, UserName = message.Username });
+        _userService.Add(new User { Id = message.Id, Email = message.Email/*, Password = message.Password*/, UserName = message.Username, Role = message.Role});
         _logger.LogInformation($"{DateTime.Now} | User added after consume: {context.Message}");
     }
 }

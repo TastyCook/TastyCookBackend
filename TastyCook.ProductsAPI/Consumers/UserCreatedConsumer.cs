@@ -4,7 +4,7 @@ using TastyCook.ProductsAPI.Services;
 
 namespace TastyCook.ProductsAPI.Consumers;
 
-public class UserCreatedConsumer : IConsumer<Contracts.Contracts.UserItemCreated>
+    public class UserCreatedConsumer : IConsumer<Contracts.Contracts.UserItemCreated>
 {
     private readonly UserService _userService;
     private readonly ILogger<UserCreatedConsumer> _logger;
