@@ -1,16 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Google.Apis.Auth;
+﻿using Google.Apis.Auth;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using TastyCook.UsersAPI.Entities;
 using TastyCook.UsersAPI.Models;
-using static MassTransit.ValidationResultExtensions;
 using static TastyCook.Contracts.Contracts;
 
 namespace TastyCook.UsersAPI.Controllers
@@ -54,7 +53,14 @@ namespace TastyCook.UsersAPI.Controllers
                 _logger.LogInformation($"{DateTime.Now} | Start authentication with Google account {data.IdToken}");
                 GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-                settings.Audience = new List<string>() { "831416949571-31eonrv6akqo426nnrrmjar8htnguboa.apps.googleusercontent.com" };
+                settings.Audience = new List<string>()
+                {
+                    "831416949571-31eonrv6akqo426nnrrmjar8htnguboa.apps.googleusercontent.com",
+                    "831416949571-vl5igs5ltim3lvadnqu3konl5qm7j6q2.apps.googleusercontent.com",
+                    "831416949571-mslnittg9g22sr6vi21ar67lbi5g3iuv.apps.googleusercontent.com",
+                    "831416949571-31eonrv6akqo426nnrrmjar8htnguboa.apps.googleusercontent.com",
+                    "831416949571-ls43d0irage6vsb91kl7s49p2b6u4pfq.apps.googleusercontent.com"
+                };
 
                 GoogleJsonWebSignature.Payload payload = GoogleJsonWebSignature.ValidateAsync(data.IdToken, settings).Result;
 
@@ -96,7 +102,6 @@ namespace TastyCook.UsersAPI.Controllers
         [HttpPost]
         [Route("register")]
         [AllowAnonymous]
-        //[ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> Register([FromBody] UserModel user)
         {
             try
