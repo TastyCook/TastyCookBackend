@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TastyCook.RecipesAPI.Entities;
 using TastyCook.RecipesAPI.Models;
+using TastyCook.RecipesAPI.ResponsibilityHandlers;
 
 namespace TastyCook.RecipesAPI.Services
 {
@@ -47,8 +48,24 @@ namespace TastyCook.RecipesAPI.Services
 
         public IEnumerable<Recipe> GetAll(GetAllRecipesRequest request)
         {
-            var recipesQuery = GetRecipesByFiltersQuery(request.SearchValue, request.Filters, request.Localization, "");
-            var recipes = GetRecipesByPagination(recipesQuery, request.Limit, request.Offset)
+            IQueryable<Recipe> recipesQuery = _db.Recipes
+                .Include(r => r.Categories)
+                .Include(r => r.RecipeUsers)
+                .Include(r => r.RecipeProducts)
+                .ThenInclude(rp => rp.Product);
+
+            var handler = HandlerProvider.GetFiltersHandler();
+            var result = handler.Handle(new HandlersRequest()
+            {
+                SearchValue = request.SearchValue,
+                Filters = request.Filters,
+                Localization = request.Localization,
+                Limit = request.Limit,
+                Offset = request.Offset,
+                Recipes = recipesQuery
+            });
+
+            var recipes = result.Recipes.ToList()
                 .Select(r => new Recipe(r)
                 {
                     Categories = r.Categories.Where(c => c.Localization == request.Localization).ToList()
