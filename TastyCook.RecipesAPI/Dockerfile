@@ -18,3 +18,4 @@ COPY --from=builder /App/out .
 EXPOSE 80
 
 ENTRYPOINT ["dotnet", "TastyCook.RecipesAPI.dll"]
+
