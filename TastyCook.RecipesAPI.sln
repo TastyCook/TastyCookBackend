@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.Contracts", "Tast
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.ProductsAPI", "TastyCook.ProductsAPI\TastyCook.ProductsAPI.csproj", "{E2C26C19-58EC-40C6-92CE-1D9076786129}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyCook.RecipesAPI.Tests", "TastyCook.RecipesAPI.Tests\TastyCook.RecipesAPI.Tests.csproj", "{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TastyCook.RecipesAPI.Tests", "TastyCook.RecipesAPI.Tests\TastyCook.RecipesAPI.Tests.csproj", "{12F0F97E-CB91-4A6C-884C-BCF1A46AAD3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

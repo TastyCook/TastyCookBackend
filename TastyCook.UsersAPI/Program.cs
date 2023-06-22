@@ -98,7 +98,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-builder.Services.AddAuthorization();
 
 var jwtConfig = builder.Configuration.GetSection("JwtConfig");
 builder.Services.AddAuthentication(opt =>
@@ -120,6 +119,8 @@ builder.Services.AddAuthentication(opt =>
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Secret"]))
         };
     });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen(options => { options.SwaggerDoc("v1", new OpenApiInfo { Title = "TastyCook", Version = "v1" }); }
 );

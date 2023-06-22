@@ -7,7 +7,7 @@ public class AbstractHandler : IHandler
     public IHandler SetNext(IHandler handler)
     {
         _nextHandler = handler;
-        return handler;
+        return this;
     }
 
     public virtual HandlersRequest Handle(HandlersRequest request)

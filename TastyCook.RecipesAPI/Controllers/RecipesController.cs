@@ -225,7 +225,6 @@ namespace TastyCook.RecipesAPI.Controllers
         }
 
         [HttpPost("")]
-        //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Add([FromBody] RecipeModel recipe)
         {
             try
@@ -246,7 +245,6 @@ namespace TastyCook.RecipesAPI.Controllers
         }
 
         [HttpPatch("")]
-        //[ValidateAntiForgeryToken]
         public async Task<ActionResult> Update(RecipeModel recipe)
         {
             try
@@ -266,7 +264,6 @@ namespace TastyCook.RecipesAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        //[ValidateAntiForgeryToken]
         public ActionResult DeleteById(int id)
         {
             try
@@ -287,7 +284,6 @@ namespace TastyCook.RecipesAPI.Controllers
 
 
         [HttpPatch("{id}/likes")]
-        //[ValidateAntiForgeryToken]
         public async Task<ActionResult> ChangeLikeForRecipe(int id)
         {
             try
